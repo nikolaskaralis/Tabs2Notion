@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Add tabs to Notion</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="selector-shell">
+    <header class="selector-header">
+      <div class="selector-line">
+        <div class="selector-label">Add to</div>
+        <div id="targetName" class="selector-value">Choose a database</div>
+        <div class="chev">⌄</div>
+      </div>
+      <div class="divider" style="margin:0"></div>
+      <div class="selector-line">
+        <div class="selector-label">Workspace</div>
+        <div>
+          <select id="workspaceSelect" aria-label="Workspace"></select>
+        </div>
+        <div></div>
+      </div>
+    </header>
+
+    <section class="selector-body">
+      <div id="opSummary" class="subtle" style="margin-bottom:12px"></div>
+      <input id="searchInput" class="text-input" type="search" placeholder="Search databases..." autocomplete="off">
+      <div id="loading" class="status" style="margin-top:12px">Loading databases…</div>
+      <div id="recentSection" hidden>
+        <div class="section-title">Recent</div>
+        <div id="recentList" class="db-list"></div>
+      </div>
+      <div id="allSection" hidden>
+        <div class="section-title">Databases</div>
+        <div id="databaseList" class="db-list"></div>
+      </div>
+      <div id="emptyState" class="status" hidden style="margin-top:12px"></div>
+      <div id="saveStatus" hidden style="margin-top:14px">
+        <div id="progressText" class="subtle" style="margin-bottom:7px"></div>
+        <div class="progress"><div id="progressBar"></div></div>
+      </div>
+      <div id="resultStatus" hidden class="status" style="margin-top:12px"></div>
+    </section>
+
+    <footer class="selector-footer">
+      <label class="row" style="font-size:13px; margin-bottom:10px">
+        <input id="closeTabs" type="checkbox">
+        <span>Close successfully saved tabs</span>
+      </label>
+      <div class="row-between">
+        <button id="cancelBtn" class="secondary">Cancel</button>
+        <button id="saveBtn" class="primary" disabled>Save tabs</button>
+      </div>
+    </footer>
+  </main>
+  <script type="module" src="js/selector.js"></script>
+</body>
+</html>
