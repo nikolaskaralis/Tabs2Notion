@@ -2,6 +2,12 @@ import { ACTIONS, hostnameForUrl } from "./js/tabs.js";
 import { startOperation } from "./js/operations.js";
 import { getSettings, toggleExcludedHost } from "./js/storage.js";
 
+// OAuth credentials live in chrome.storage.local. Keep that storage area visible only
+// to trusted extension contexts, even if content scripts are added in the future.
+chrome.storage.local.setAccessLevel({ accessLevel: "TRUSTED_CONTEXTS" }).catch((error) => {
+  console.warn("Could not restrict local storage access", error);
+});
+
 const MENU = {
   OPEN: "t2n-open",
   SEND_PARENT: "t2n-send-parent",
