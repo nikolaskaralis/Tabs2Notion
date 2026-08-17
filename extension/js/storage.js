@@ -1,7 +1,7 @@
-import { DEFAULT_OAUTH_BACKEND } from "./config.js";
+import { decryptString, encryptString } from "./crypto-storage.js";
 
 const DEFAULTS = {
-  oauthBackendUrl: DEFAULT_OAUTH_BACKEND,
+  oauthClient: null,
   workspaces: {},
   recentTargets: {},
   lastTargetByWorkspace: {},
@@ -19,16 +19,66 @@ export async function setSettings(patch) {
   await chrome.storage.local.set(patch);
 }
 
+export async function getOAuthClient() {
+  const { oauthClient } = await getSettings();
+  if (!oauthClient) return null;
+  return {
+    ...oauthClient,
+    client_secret: oauthClient.client_secret_encrypted
+      ? await decryptString(oauthClient.client_secret_encrypted)
+      : null
+  };
+}
+
+export async function setOAuthClient(client) {
+  if (!client) {
+    await setSettings({ oauthClient: null });
+    return;
+  }
+  const stored = { ...client };
+  delete stored.client_secret;
+  stored.client_secret_encrypted = client.client_secret ? await encryptString(client.client_secret) : null;
+  await setSettings({ oauthClient: stored });
+}
+
 export async function getWorkspace(workspaceId) {
   const { workspaces } = await getSettings();
-  return workspaces[workspaceId] || null;
+  const stored = workspaces[workspaceId];
+  if (!stored) return null;
+  return {
+    ...stored,
+    access_token: await decryptString(stored.access_token_encrypted || stored.access_token),
+    refresh_token: await decryptString(stored.refresh_token_encrypted || stored.refresh_token)
+  };
 }
 
 export async function upsertWorkspace(workspace) {
-  const { workspaces } = await getSettings();
-  const next = { ...workspaces, [workspace.workspace_id]: workspace };
+  const settings = await getSettings();
+  const previous = settings.workspaces[workspace.workspace_id] || {};
+  const stored = {
+    ...previous,
+    ...workspace,
+    access_token_encrypted: workspace.access_token
+      ? await encryptString(workspace.access_token)
+      : previous.access_token_encrypted || null,
+    refresh_token_encrypted: workspace.refresh_token
+      ? await encryptString(workspace.refresh_token)
+      : previous.refresh_token_encrypted || null
+  };
+  delete stored.access_token;
+  delete stored.refresh_token;
+
+  const next = { ...settings.workspaces, [workspace.workspace_id]: stored };
   await setSettings({ workspaces: next, lastWorkspaceId: workspace.workspace_id });
-  return workspace;
+  return { ...workspace };
+}
+
+export async function markWorkspaceNeedsReauth(workspaceId) {
+  const settings = await getSettings();
+  const current = settings.workspaces[workspaceId];
+  if (!current) return;
+  const updated = { ...current, needs_reauth: true, access_token_encrypted: null, refresh_token_encrypted: null };
+  await setSettings({ workspaces: { ...settings.workspaces, [workspaceId]: updated } });
 }
 
 export async function removeWorkspace(workspaceId) {

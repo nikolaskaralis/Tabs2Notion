@@ -1,11 +1,13 @@
 export const APP_NAME = "Tabs2Notion";
-export const NOTION_API_BASE = "https://api.notion.com/v1";
-export const NOTION_VERSION = "2026-03-11";
+export const APP_VERSION = "0.2.0";
 
-// For a private/local install, you can either paste the deployed Worker URL in
-// the onboarding screen, or hard-code it here before loading the extension.
-export const DEFAULT_OAUTH_BACKEND = "";
+export const NOTION_MCP_ENDPOINT = "https://mcp.notion.com/mcp";
+export const MCP_PROTOCOL_VERSION = "2025-11-25";
+export const OAUTH_CLIENT_URI = "https://github.com/nikolaskaralis/Tabs2Notion";
 
-export const MAX_DATABASES_TO_LOAD = 500;
+export const SEARCH_DEBOUNCE_MS = 350;
+export const MIN_DATABASE_SEARCH_LENGTH = 1;
 export const CREATE_REQUEST_SPACING_MS = 380;
-export const MAX_RETRIES = 5;
+export const CREATE_BATCH_SIZE = 10;
+export const MAX_RETRIES = 4;
+export const TOKEN_REFRESH_SKEW_MS = 60_000;

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Tabs2Notion",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Send one tab, a tab group, a window, or all open tabs to a Notion database.",
   "minimum_chrome_version": "123",
   "permissions": [
@@ -11,10 +11,11 @@
     "identity"
   ],
   "host_permissions": [
-    "https://api.notion.com/*",
-    "https://*.workers.dev/*",
-    "http://localhost/*",
-    "http://127.0.0.1/*"
+    "https://mcp.notion.com/*"
+  ],
+  "optional_host_permissions": [
+    "https://*.notion.com/*",
+    "https://*.notion.so/*"
   ],
   "background": {
     "service_worker": "service-worker.js",

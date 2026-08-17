@@ -1,4 +1,5 @@
-import { listDataSources, saveTabs } from "./notion.js";
+import { MIN_DATABASE_SEARCH_LENGTH, SEARCH_DEBOUNCE_MS } from "./config.js";
+import { searchDataSources, saveTabs } from "./notion.js";
 import {
   deletePendingOperation,
   getPendingOperation,
@@ -32,9 +33,12 @@ const resultStatus = document.getElementById("resultStatus");
 let settings;
 let operation;
 let currentWorkspaceId;
-let allDatabases = [];
+let searchResults = [];
 let selectedTarget = null;
 let saving = false;
+let searchTimer = null;
+let searchGeneration = 0;
+let searching = false;
 
 function databaseButton(item, isSelected = false) {
   const button = document.createElement("button");
@@ -51,7 +55,7 @@ function databaseButton(item, isSelected = false) {
   title.textContent = item.title;
   const meta = document.createElement("div");
   meta.className = "db-meta";
-  meta.textContent = "Notion database";
+  meta.textContent = item.dataSourceId ? "Notion database" : "Notion result";
   info.append(title, meta);
 
   const mark = document.createElement("div");
@@ -63,6 +67,13 @@ function databaseButton(item, isSelected = false) {
   return button;
 }
 
+function sameTarget(a, b) {
+  if (!a || !b) return false;
+  return (a.dataSourceId && b.dataSourceId && a.dataSourceId === b.dataSourceId)
+    || (a.url && b.url && a.url === b.url)
+    || a.id === b.id;
+}
+
 function selectTarget(item) {
   selectedTarget = item;
   targetName.textContent = item.title;
@@ -72,45 +83,79 @@ function selectTarget(item) {
 
 function renderLists() {
   const query = searchInput.value.trim().toLowerCase();
-  const filtered = allDatabases.filter((item) => item.title.toLowerCase().includes(query));
   const recents = (settings.recentTargets[currentWorkspaceId] || [])
     .filter((item) => !query || item.title.toLowerCase().includes(query));
 
-  recentList.replaceChildren(...recents.map((item) => databaseButton(item, item.id === selectedTarget?.id)));
+  recentList.replaceChildren(...recents.map((item) => databaseButton(item, sameTarget(item, selectedTarget))));
   recentSection.hidden = recents.length === 0;
-  databaseList.replaceChildren(...filtered.map((item) => databaseButton(item, item.id === selectedTarget?.id)));
-  allSection.hidden = filtered.length === 0;
-  emptyState.hidden = filtered.length > 0 || recents.length > 0;
+  databaseList.replaceChildren(...searchResults.map((item) => databaseButton(item, sameTarget(item, selectedTarget))));
+  allSection.hidden = searchResults.length === 0;
+
+  loading.hidden = !searching;
+  if (searching) loading.textContent = "Searching Notion…";
+
+  const hasItems = recents.length > 0 || searchResults.length > 0;
+  emptyState.hidden = searching || hasItems;
+  emptyState.className = "status";
   if (!emptyState.hidden) {
-    emptyState.textContent = query ? "No matching databases." : "No accessible databases found. Reconnect Notion and grant access to the database you want to use.";
+    if (query.length >= MIN_DATABASE_SEARCH_LENGTH) {
+      emptyState.textContent = "No matching results. Try the database's exact name.";
+    } else if (recents.length) {
+      emptyState.textContent = "";
+    } else {
+      emptyState.textContent = "Type a database name to search this workspace.";
+    }
   }
+
+  saveBtn.disabled = saving || !selectedTarget || !operation?.tabs?.length;
+}
+
+async function runSearch() {
+  const query = searchInput.value.trim();
+  const generation = ++searchGeneration;
+  if (query.length < MIN_DATABASE_SEARCH_LENGTH) {
+    searchResults = [];
+    searching = false;
+    renderLists();
+    return;
+  }
+
+  searching = true;
+  renderLists();
+  try {
+    const results = await searchDataSources(currentWorkspaceId, query);
+    if (generation !== searchGeneration) return;
+    searchResults = results;
+  } catch (error) {
+    if (generation !== searchGeneration) return;
+    searchResults = [];
+    emptyState.hidden = false;
+    emptyState.className = "status error";
+    emptyState.textContent = error.message === "REAUTH_REQUIRED"
+      ? "Your Notion connection expired. Reconnect from Tabs2Notion settings."
+      : (error.message || String(error));
+  } finally {
+    if (generation === searchGeneration) {
+      searching = false;
+      renderLists();
+    }
+  }
+}
+
+function scheduleSearch() {
+  if (searchTimer) clearTimeout(searchTimer);
+  searchTimer = setTimeout(runSearch, SEARCH_DEBOUNCE_MS);
 }
 
 async function loadWorkspace(workspaceId) {
   currentWorkspaceId = workspaceId;
   selectedTarget = settings.lastTargetByWorkspace[workspaceId] || null;
   targetName.textContent = selectedTarget?.title || "Choose a database";
-  loading.hidden = false;
-  recentSection.hidden = true;
-  allSection.hidden = true;
-  emptyState.hidden = true;
-  saveBtn.disabled = true;
-
-  try {
-    allDatabases = await listDataSources(workspaceId);
-    loading.hidden = true;
-    if (selectedTarget && !allDatabases.some((item) => item.id === selectedTarget.id)) {
-      const stillRecent = (settings.recentTargets[workspaceId] || []).some((item) => item.id === selectedTarget.id);
-      if (!stillRecent) selectedTarget = null;
-    }
-    renderLists();
-    saveBtn.disabled = saving || !selectedTarget || !operation?.tabs?.length;
-  } catch (error) {
-    loading.hidden = true;
-    emptyState.hidden = false;
-    emptyState.textContent = error.message || String(error);
-    emptyState.className = "status error";
-  }
+  searchInput.value = "";
+  searchResults = [];
+  searching = false;
+  searchGeneration += 1;
+  renderLists();
 }
 
 async function init() {
@@ -180,7 +225,7 @@ workspaceSelect.addEventListener("change", async () => {
   await setSettings({ lastWorkspaceId: workspaceSelect.value });
   await loadWorkspace(workspaceSelect.value);
 });
-searchInput.addEventListener("input", renderLists);
+searchInput.addEventListener("input", scheduleSearch);
 closeTabs.addEventListener("change", () => setSettings({ closeTabsAfterSave: closeTabs.checked }));
 cancelBtn.addEventListener("click", async () => {
   if (opId) await deletePendingOperation(opId);
@@ -200,12 +245,14 @@ saveBtn.addEventListener("click", async () => {
   progressText.textContent = `Saving 0 of ${operation.tabs.length}…`;
 
   try {
-    const result = await saveTabs(currentWorkspaceId, selectedTarget.id, operation.tabs, ({ completed, total, successes, failures }) => {
+    const result = await saveTabs(currentWorkspaceId, selectedTarget, operation.tabs, ({ completed, total, successes, failures }) => {
       progressBar.style.width = `${Math.round((completed / total) * 100)}%`;
       progressText.textContent = `Saving ${completed} of ${total} · ${successes} saved${failures ? ` · ${failures} failed` : ""}`;
     });
 
-    await rememberTarget(currentWorkspaceId, selectedTarget);
+    const rememberedTarget = result.target || selectedTarget;
+    selectedTarget = rememberedTarget;
+    await rememberTarget(currentWorkspaceId, rememberedTarget);
 
     if (closeTabs.checked && result.successes.length) {
       const ids = result.successes.map((item) => item.tab.id).filter((id) => Number.isInteger(id));
@@ -222,14 +269,16 @@ saveBtn.addEventListener("click", async () => {
       cancelBtn.textContent = "Close";
     } else {
       resultStatus.className = "status success";
-      resultStatus.textContent = `${result.successes.length} tab${result.successes.length === 1 ? "" : "s"} saved to ${selectedTarget.title}.`;
+      resultStatus.textContent = `${result.successes.length} tab${result.successes.length === 1 ? "" : "s"} saved to ${rememberedTarget.title}.`;
       if (opId) await deletePendingOperation(opId);
       setTimeout(() => window.close(), 900);
     }
   } catch (error) {
     resultStatus.hidden = false;
     resultStatus.className = "status error";
-    resultStatus.textContent = error.message || String(error);
+    resultStatus.textContent = error.message === "REAUTH_REQUIRED"
+      ? "Your Notion connection expired. Reconnect from Tabs2Notion settings."
+      : (error.message || String(error));
     cancelBtn.disabled = false;
     cancelBtn.textContent = "Close";
   } finally {

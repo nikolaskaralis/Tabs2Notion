@@ -1,15 +1,12 @@
-import { connectWorkspace, setOAuthBackendUrl } from "./auth.js";
+import { connectWorkspace } from "./auth.js";
 import { getSettings, removeWorkspace } from "./storage.js";
 
-const backendUrl = document.getElementById("backendUrl");
-const backendStatus = document.getElementById("backendStatus");
 const connectStatus = document.getElementById("connectStatus");
 const workspaceList = document.getElementById("workspaceList");
 const connectBtn = document.getElementById("connectBtn");
 
 async function render() {
   const settings = await getSettings();
-  backendUrl.value = settings.oauthBackendUrl || "";
   const workspaces = Object.values(settings.workspaces);
   workspaceList.replaceChildren();
 
@@ -30,21 +27,16 @@ async function render() {
     left.className = "workspace-pill";
     const icon = document.createElement("div");
     icon.className = "workspace-icon";
-    if (workspace.workspace_icon) {
-      const img = document.createElement("img");
-      img.src = workspace.workspace_icon;
-      img.alt = "";
-      icon.append(img);
-    } else {
-      icon.textContent = "🌐";
-    }
+    icon.textContent = "🌐";
     const text = document.createElement("div");
     const name = document.createElement("div");
     name.className = "workspace-name";
     name.textContent = workspace.workspace_name || "Notion workspace";
     const meta = document.createElement("div");
     meta.className = "subtle";
-    meta.textContent = "Connected";
+    meta.textContent = workspace.needs_reauth
+      ? "Connection expired — connect Notion again"
+      : (workspace.user_name ? `Connected as ${workspace.user_name}` : "Connected");
     text.append(name, meta);
     left.append(icon, text);
 
@@ -61,25 +53,17 @@ async function render() {
   }
 }
 
-document.getElementById("saveBackendBtn").addEventListener("click", async () => {
-  try {
-    const saved = await setOAuthBackendUrl(backendUrl.value);
-    backendStatus.textContent = saved ? `Saved ${saved}` : "Backend URL cleared.";
-  } catch (error) {
-    backendStatus.textContent = error.message || String(error);
-  }
-});
-
 connectBtn.addEventListener("click", async () => {
   connectBtn.disabled = true;
   connectStatus.textContent = "Opening Notion authorization…";
   try {
-    await setOAuthBackendUrl(backendUrl.value);
     const workspace = await connectWorkspace();
     connectStatus.textContent = `Connected ${workspace.workspace_name || "Notion workspace"}.`;
     await render();
   } catch (error) {
-    connectStatus.textContent = error.message || String(error);
+    connectStatus.textContent = error.message === "REAUTH_REQUIRED"
+      ? "The Notion connection expired. Connect again."
+      : (error.message || String(error));
   } finally {
     connectBtn.disabled = false;
   }

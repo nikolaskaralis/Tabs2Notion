@@ -11,17 +11,18 @@
     <div class="brand"><img src="icons/icon48.png" alt=""><span class="brand-name">Tabs2Notion Help</span></div>
     <section class="card stack">
       <h2>How saving works</h2>
-      <p>Choose a tab command from the toolbar popup or context menu. Tabs2Notion captures the matching tab titles and URLs, then opens a small destination window. Pick a connected workspace and an accessible Notion database, then save.</p>
-      <p>If the target database contains a URL property, Tabs2Notion writes the tab URL there. Otherwise it preserves the URL as a clickable link inside the new Notion page.</p>
+      <p>Choose a tab command from the toolbar popup or context menu. Tabs2Notion captures the matching tab titles and URLs, then opens a small destination window. Pick a connected workspace, search for a Notion database, and save.</p>
+      <p>Tabs2Notion always preserves the original URL in the created page. When it can identify a URL property in the target data source schema, it fills that property too.</p>
     </section>
     <section id="oauth" class="card stack">
-      <h2>OAuth backend setup</h2>
-      <p>Notion public OAuth requires a client ID and client secret when exchanging authorization codes. A browser extension cannot safely contain that secret, so Tabs2Notion includes a minimal Cloudflare Worker under <code>backend/cloudflare-worker</code>.</p>
-      <p>Follow the repository README to create a Notion public connection, deploy the Worker, set its secrets, register the Worker callback URL in Notion, then paste the Worker URL into Tabs2Notion settings.</p>
+      <h2>Notion sign-in</h2>
+      <p>Tabs2Notion uses Notion's hosted MCP OAuth flow with PKCE and dynamic client registration. Authentication happens directly between this extension and Notion; there is no Tabs2Notion authentication backend and no API key to paste.</p>
+      <p>Access and refresh tokens are encrypted locally in the Chrome profile. Disconnecting a workspace removes the stored credentials for it.</p>
     </section>
     <section class="card stack">
-      <h2>Workspace/database access</h2>
-      <p>During Notion OAuth, Notion shows a page picker. Only pages/databases you grant to Tabs2Notion are returned by the Notion Search API. If a database is missing, reconnect the workspace and grant access to that database or a parent page containing it.</p>
+      <h2>Finding a database</h2>
+      <p>Recent destinations appear immediately. For a new destination, type part of its name into the search field. Notion MCP search is used on demand rather than downloading a full list of every page in the workspace.</p>
+      <p>If a search result is not actually a database, Tabs2Notion will reject it before writing anything and ask you to choose a database/data source.</p>
     </section>
     <section class="card stack">
       <h2>Tab-selection commands</h2>

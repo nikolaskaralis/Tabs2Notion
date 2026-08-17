@@ -11,28 +11,14 @@
     <div class="brand"><img src="icons/icon48.png" alt=""><span class="brand-name">Tabs2Notion</span></div>
     <div>
       <h1>Send open tabs straight to Notion.</h1>
-      <p class="subtle">Tabs2Notion uses Notion OAuth. Your Notion password is entered only on Notion's own authorization page; the extension never receives it.</p>
+      <p class="subtle">No server, API key, or developer setup. Tabs2Notion connects directly to Notion using Notion MCP OAuth with PKCE.</p>
     </div>
-
-    <section class="card stack">
-      <h2>1. OAuth backend</h2>
-      <p class="subtle" style="margin:0">A tiny companion backend is required because Notion's OAuth token exchange requires a client secret, which cannot safely be embedded in a Chrome extension.</p>
-      <label class="stack" style="gap:6px">
-        <span class="subtle">Cloudflare Worker URL</span>
-        <input id="backendUrl" class="text-input" placeholder="https://tabs2notion.yourname.workers.dev">
-      </label>
-      <div class="row">
-        <button id="saveBackendBtn" class="secondary">Save backend URL</button>
-        <a href="help.html#oauth" target="_blank">Setup instructions</a>
-      </div>
-      <div id="backendStatus" class="subtle"></div>
-    </section>
 
     <section class="card stack">
       <div class="row-between">
         <div>
-          <h2>2. Connect Notion</h2>
-          <div class="subtle">Connect one or more workspaces. You choose which pages/databases Tabs2Notion may access in Notion's page picker.</div>
+          <h2>1. Connect Notion</h2>
+          <div class="subtle">Notion opens its own authorization window. Tabs2Notion never receives your Notion password.</div>
         </div>
         <button id="connectBtn" class="primary">Connect Notion</button>
       </div>
@@ -41,12 +27,17 @@
     </section>
 
     <section class="card stack">
-      <h2>3. Use it</h2>
-      <p style="margin:0">Click the Tabs2Notion toolbar icon, or right-click the extension/page/tab and choose a tab-selection command. A small destination window opens so you can choose the workspace and Notion database before saving.</p>
+      <h2>2. Use it</h2>
+      <p style="margin:0">Click the Tabs2Notion toolbar icon, or use the right-click menu. Choose the tabs you want to send, then select a connected workspace and search for the destination Notion database.</p>
       <div class="row">
         <button id="openDashboardBtn" class="secondary">Open Tabs2Notion</button>
         <a href="help.html" target="_blank">Help</a>
       </div>
+    </section>
+
+    <section class="card stack">
+      <h2>Privacy</h2>
+      <p class="subtle" style="margin:0">Tab titles and URLs are sent only to the Notion workspace/database you choose. OAuth credentials are encrypted locally in this Chrome profile and are not sent to a Tabs2Notion server.</p>
     </section>
   </main>
   <script type="module" src="js/onboarding.js"></script>
