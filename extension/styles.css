@@ -29,6 +29,9 @@ button { cursor: pointer; }
 .subtle { color: var(--muted); font-size: 13px; }
 
 .card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 18px; box-shadow: 0 8px 30px rgba(24, 24, 28, 0.04); }
+.pin-card { background: linear-gradient(135deg, #ffffff 0%, #f7f5ff 100%); border-color: #dcd5ff; }
+.pin-steps { display: flex; gap: 8px; flex-wrap: wrap; }
+.pin-step { background: var(--accent-soft); color: #4b3cb0; border-radius: 999px; padding: 6px 9px; font-size: 12px; font-weight: 650; }
 .stack { display: grid; gap: 12px; }
 .row { display: flex; align-items: center; gap: 10px; }
 .row-between { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
