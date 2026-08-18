@@ -1,3 +1,4 @@
+import { DEFAULT_OAUTH_BACKEND } from "./config.js";
 import { getSettings, setSettings, upsertWorkspace } from "./storage.js";
 
 function normalizeBackendUrl(value) {
@@ -8,6 +9,10 @@ function normalizeBackendUrl(value) {
   return url.origin + url.pathname.replace(/\/$/, "");
 }
 
+function configuredBackend(settings) {
+  return normalizeBackendUrl(DEFAULT_OAUTH_BACKEND || settings?.oauthBackendUrl || "");
+}
+
 function decodeBase64UrlJson(value) {
   const base64 = value.replace(/-/g, "+").replace(/_/g, "/");
   const padded = base64 + "=".repeat((4 - (base64.length % 4)) % 4);
@@ -15,15 +20,24 @@ function decodeBase64UrlJson(value) {
   return JSON.parse(new TextDecoder().decode(bytes));
 }
 
+export function hasBundledOAuthBackend() {
+  return Boolean(normalizeBackendUrl(DEFAULT_OAUTH_BACKEND));
+}
+
 export async function setOAuthBackendUrl(value) {
+  if (hasBundledOAuthBackend()) return normalizeBackendUrl(DEFAULT_OAUTH_BACKEND);
   const normalized = normalizeBackendUrl(value);
   await setSettings({ oauthBackendUrl: normalized });
   return normalized;
 }
 
+export async function getOAuthBackendUrl() {
+  return configuredBackend(await getSettings());
+}
+
 export async function connectWorkspace() {
-  const { oauthBackendUrl } = await getSettings();
-  const backend = normalizeBackendUrl(oauthBackendUrl);
+  const settings = await getSettings();
+  const backend = configuredBackend(settings);
   if (!backend) throw new Error("Configure the Tabs2Notion OAuth backend first.");
 
   const returnTo = chrome.identity.getRedirectURL("notion");
@@ -61,7 +75,7 @@ export async function refreshWorkspaceToken(workspaceId) {
   const settings = await getSettings();
   const workspace = settings.workspaces[workspaceId];
   if (!workspace) throw new Error("Workspace is not connected.");
-  const backend = normalizeBackendUrl(settings.oauthBackendUrl);
+  const backend = configuredBackend(settings);
   if (!backend) throw new Error("OAuth backend is not configured.");
 
   const response = await fetch(`${backend}/oauth/refresh`, {
