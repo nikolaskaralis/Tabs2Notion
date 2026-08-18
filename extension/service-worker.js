@@ -91,7 +91,12 @@ async function refreshContextMenuState(tab = null) {
 chrome.runtime.onInstalled.addListener(async ({ reason }) => {
   await Promise.all([ensureStoragePrivacy(), createMenus(), applyToolbarBehavior(), applyActionIcon()]);
   if (reason === "install") {
-    await chrome.tabs.create({ url: chrome.runtime.getURL("onboarding.html?first=1") });
+    try {
+      await chrome.runtime.openOptionsPage();
+    } catch (error) {
+      console.warn("Could not open Tabs2Notion settings through openOptionsPage; falling back to a tab", error);
+      await chrome.tabs.create({ url: chrome.runtime.getURL("onboarding.html") });
+    }
   }
 });
 
