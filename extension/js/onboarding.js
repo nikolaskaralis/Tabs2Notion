@@ -7,6 +7,9 @@ import {
 import { listDataSources } from "./notion.js";
 import { getSettings, removeWorkspace, setSettings } from "./storage.js";
 
+const pinPromptCard = document.getElementById("pinPromptCard");
+const checkPinBtn = document.getElementById("checkPinBtn");
+const pinStatus = document.getElementById("pinStatus");
 const developerBackendCard = document.getElementById("developerBackendCard");
 const backendUrl = document.getElementById("backendUrl");
 const backendStatus = document.getElementById("backendStatus");
@@ -23,6 +26,21 @@ const defaultStatus = document.getElementById("defaultStatus");
 
 let currentSettings;
 let databasesByWorkspace = new Map();
+
+async function renderPinPrompt() {
+  try {
+    const userSettings = await chrome.action.getUserSettings();
+    const isPinned = Boolean(userSettings?.isOnToolbar);
+    pinPromptCard.hidden = isPinned;
+    pinStatus.textContent = isPinned ? "" : "Not pinned yet.";
+    return isPinned;
+  } catch (error) {
+    console.warn("Could not read Tabs2Notion pin status", error);
+    pinPromptCard.hidden = false;
+    pinStatus.textContent = "Pin status could not be detected automatically.";
+    return false;
+  }
+}
 
 async function loadDatabases(workspaceId) {
   if (!workspaceId) return [];
@@ -91,6 +109,7 @@ async function renderDefaultControls() {
 }
 
 async function render() {
+  await renderPinPrompt();
   const settings = await getSettings();
   const bundledBackend = hasBundledOAuthBackend();
   developerBackendCard.hidden = bundledBackend;
@@ -205,6 +224,14 @@ toolbarActionSelect.addEventListener("change", async () => {
   defaultStatus.textContent = toolbarActionSelect.value === "menu"
     ? "Clicking the pinned icon will open the action menu."
     : "Clicking the pinned icon will run the selected action.";
+});
+
+checkPinBtn.addEventListener("click", () => {
+  renderPinPrompt().catch(console.warn);
+});
+
+window.addEventListener("focus", () => {
+  renderPinPrompt().catch(console.warn);
 });
 
 document.getElementById("openDashboardBtn").addEventListener("click", () => {
