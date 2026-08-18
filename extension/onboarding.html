@@ -14,6 +14,22 @@
       <p class="subtle">Connect Notion once, then choose whether actions should open the destination picker or save immediately using defaults.</p>
     </div>
 
+    <section id="pinPromptCard" class="card pin-card stack" hidden>
+      <div>
+        <h2>Pin Tabs2Notion for quick access</h2>
+        <p class="subtle" style="margin:0">Chrome keeps newly installed extensions in the Extensions menu by default. Pin Tabs2Notion so the toolbar action is always one click away.</p>
+      </div>
+      <div class="pin-steps" aria-label="How to pin Tabs2Notion">
+        <span class="pin-step">1. Click the Extensions puzzle-piece icon</span>
+        <span class="pin-step">2. Find Tabs2Notion</span>
+        <span class="pin-step">3. Click its pin icon</span>
+      </div>
+      <div class="row">
+        <button id="checkPinBtn" class="secondary">Check pin status</button>
+        <span id="pinStatus" class="subtle"></span>
+      </div>
+    </section>
+
     <section id="developerBackendCard" class="card stack" hidden>
       <h2>Developer setup</h2>
       <p class="subtle" style="margin:0">This unpacked development build does not have a production OAuth backend configured yet. Enter the publisher's OAuth Worker URL below. This section is hidden in a release build with a bundled backend URL.</p>
