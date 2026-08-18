@@ -6,6 +6,41 @@ const workspaceList = document.getElementById("workspaceList");
 const excludedList = document.getElementById("excludedList");
 const status = document.getElementById("status");
 
+function workspaceCard(ws) {
+  const row = document.createElement("div");
+  row.className = "setting-row";
+
+  const icon = document.createElement("div");
+  icon.className = "workspace-icon setting-icon";
+  const workspaceIcon = ws.workspace_icon || "";
+  if (/^https?:\/\//i.test(workspaceIcon)) {
+    const img = document.createElement("img");
+    img.src = workspaceIcon;
+    img.alt = "";
+    img.referrerPolicy = "no-referrer";
+    img.addEventListener("error", () => {
+      img.remove();
+      icon.textContent = "🌐";
+    }, { once: true });
+    icon.append(img);
+  } else if (workspaceIcon) {
+    icon.textContent = workspaceIcon;
+  } else {
+    icon.textContent = "🌐";
+  }
+
+  const copy = document.createElement("div");
+  copy.className = "setting-copy";
+  copy.innerHTML = `<div class="setting-title">${ws.workspace_name || 'Notion workspace'}</div><div class="subtle">${ws.workspace_id}</div>`;
+
+  const state = document.createElement("span");
+  state.className = "badge connected";
+  state.innerHTML = '<span class="badge-dot"></span><span>Connected</span>';
+
+  row.append(icon, copy, state);
+  return row;
+}
+
 async function render() {
   const settings = await getSettings();
   const workspaces = Object.values(settings.workspaces);
@@ -13,14 +48,7 @@ async function render() {
   if (!workspaces.length) {
     const p = document.createElement("div"); p.className = "status"; p.textContent = "No workspaces connected."; workspaceList.append(p);
   } else {
-    for (const ws of workspaces) {
-      const row = document.createElement("div"); row.className = "row-between"; row.style.padding = "8px 0";
-      const name = document.createElement("div"); name.textContent = ws.workspace_name || "Notion workspace";
-      const meta = document.createElement("div"); meta.className = "subtle"; meta.textContent = ws.workspace_id;
-      const left = document.createElement("div"); left.append(name, meta);
-      row.append(left);
-      workspaceList.append(row);
-    }
+    workspaceList.append(...workspaces.map(workspaceCard));
   }
 
   excludedList.replaceChildren();
@@ -28,11 +56,13 @@ async function render() {
     const p = document.createElement("div"); p.className = "subtle"; p.textContent = "No sites excluded."; excludedList.append(p);
   } else {
     for (const host of settings.excludedHosts) {
-      const row = document.createElement("div"); row.className = "row-between"; row.style.padding = "7px 0";
-      const label = document.createElement("code"); label.textContent = host;
+      const row = document.createElement("div"); row.className = "setting-row";
+      row.style.gridTemplateColumns = '40px 1fr auto';
+      row.innerHTML = `<div class="setting-icon">⊘</div><div class="setting-copy"><div class="setting-title">${host}</div><div class="subtle">Excluded from tab collection</div></div>`;
       const remove = document.createElement("button"); remove.className = "secondary"; remove.textContent = "Remove";
       remove.addEventListener("click", async () => { await removeExcludedHost(host); await render(); });
-      row.append(label, remove); excludedList.append(row);
+      row.append(remove);
+      excludedList.append(row);
     }
   }
 }

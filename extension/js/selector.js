@@ -1,4 +1,5 @@
 import { listDataSources, saveTabs } from "./notion.js";
+import { showSavedNotification } from "./feedback.js";
 import {
   deletePendingOperation,
   getPendingOperation,
@@ -213,6 +214,14 @@ saveBtn.addEventListener("click", async () => {
         try { await chrome.tabs.remove(ids); } catch (error) { console.warn("Could not close one or more saved tabs", error); }
       }
     }
+
+    await showSavedNotification({
+      title: result.failures.length ? "Tabs saved with some issues" : "Tabs saved to Notion",
+      message: result.failures.length
+        ? `${result.successes.length} saved · ${result.failures.length} failed`
+        : `${result.successes.length} tab${result.successes.length === 1 ? "" : "s"} saved to ${selectedTarget.title}` ,
+      isError: Boolean(result.failures.length)
+    });
 
     resultStatus.hidden = false;
     if (result.failures.length) {

@@ -1,10 +1,10 @@
 import { ACTIONS, hostnameForUrl } from "./js/tabs.js";
 import { startOperation } from "./js/operations.js";
-import { getSettings, toggleExcludedHost } from "./js/storage.js";
+import { applyActionIcon } from "./js/icon.js";
+import { ensureStoragePrivacy, getSettings, toggleExcludedHost } from "./js/storage.js";
 
 const MENU = {
   OPEN: "t2n-open",
-  SEND_PARENT: "t2n-send-parent",
   CURRENT_WINDOW: "t2n-current-window",
   CURRENT_GROUP: "t2n-current-group",
   SELECTED: "t2n-selected",
@@ -28,25 +28,31 @@ const actionMap = {
   [MENU.ALL_WINDOWS]: ACTIONS.ALL_WINDOWS
 };
 
+async function applyToolbarBehavior() {
+  const settings = await getSettings();
+  const popup = settings.toolbarAction === "menu" ? "popup.html" : "";
+  await chrome.action.setPopup({ popup });
+}
+
 async function createMenus() {
   await chrome.contextMenus.removeAll();
-  const contexts = ["action", "page", "tab"];
+  const pageContexts = ["page", "tab"];
+  const allContexts = ["action", "page", "tab"];
 
-  chrome.contextMenus.create({ id: MENU.OPEN, title: "Open Tabs2Notion", contexts });
-  chrome.contextMenus.create({ id: MENU.SEND_PARENT, title: "Send tabs to Notion", contexts });
-  chrome.contextMenus.create({ id: MENU.CURRENT_WINDOW, parentId: MENU.SEND_PARENT, title: "All tabs in this window", contexts });
-  chrome.contextMenus.create({ id: MENU.CURRENT_GROUP, parentId: MENU.SEND_PARENT, title: "Tabs in this tab group", contexts });
-  chrome.contextMenus.create({ id: MENU.SELECTED, parentId: MENU.SEND_PARENT, title: "Selected tabs", contexts });
-  chrome.contextMenus.create({ id: "t2n-sep-1", parentId: MENU.SEND_PARENT, type: "separator", contexts });
-  chrome.contextMenus.create({ id: MENU.CURRENT_TAB, parentId: MENU.SEND_PARENT, title: "Only this tab", contexts });
-  chrome.contextMenus.create({ id: MENU.EXCEPT_CURRENT, parentId: MENU.SEND_PARENT, title: "All tabs except this tab", contexts });
-  chrome.contextMenus.create({ id: MENU.LEFT, parentId: MENU.SEND_PARENT, title: "Tabs on the left", contexts });
-  chrome.contextMenus.create({ id: MENU.RIGHT, parentId: MENU.SEND_PARENT, title: "Tabs on the right", contexts });
-  chrome.contextMenus.create({ id: MENU.ALL_WINDOWS, parentId: MENU.SEND_PARENT, title: "All tabs from all windows", contexts });
-  chrome.contextMenus.create({ id: "t2n-sep-2", type: "separator", contexts });
-  chrome.contextMenus.create({ id: MENU.EXCLUDE, title: "Exclude current site from Tabs2Notion", contexts });
-  chrome.contextMenus.create({ id: "t2n-sep-3", type: "separator", contexts });
-  chrome.contextMenus.create({ id: MENU.HELP, title: "Help", contexts });
+  chrome.contextMenus.create({ id: MENU.OPEN, title: "Open Tabs2Notion", contexts: allContexts });
+  chrome.contextMenus.create({ id: MENU.CURRENT_WINDOW, title: "Send all tabs in this window to Notion", contexts: pageContexts });
+  chrome.contextMenus.create({ id: MENU.CURRENT_GROUP, title: "Send all tabs in this tab group to Notion", contexts: pageContexts });
+  chrome.contextMenus.create({ id: MENU.SELECTED, title: "Send selected tabs to Notion", contexts: pageContexts });
+  chrome.contextMenus.create({ id: "t2n-sep-1", type: "separator", contexts: pageContexts });
+  chrome.contextMenus.create({ id: MENU.CURRENT_TAB, title: "Send only this tab to Notion", contexts: pageContexts });
+  chrome.contextMenus.create({ id: MENU.EXCEPT_CURRENT, title: "Send all tabs except this tab to Notion", contexts: pageContexts });
+  chrome.contextMenus.create({ id: MENU.LEFT, title: "Send tabs on the left to Notion", contexts: pageContexts });
+  chrome.contextMenus.create({ id: MENU.RIGHT, title: "Send tabs on the right to Notion", contexts: pageContexts });
+  chrome.contextMenus.create({ id: MENU.ALL_WINDOWS, title: "Send all tabs from all windows to Notion", contexts: pageContexts });
+  chrome.contextMenus.create({ id: "t2n-sep-2", type: "separator", contexts: pageContexts });
+  chrome.contextMenus.create({ id: MENU.EXCLUDE, title: "Exclude current site from Tabs2Notion", contexts: pageContexts });
+  chrome.contextMenus.create({ id: "t2n-sep-3", type: "separator", contexts: pageContexts });
+  chrome.contextMenus.create({ id: MENU.HELP, title: "Help", contexts: allContexts });
 
   await refreshContextMenuState();
 }
@@ -83,17 +89,40 @@ async function refreshContextMenuState(tab = null) {
 }
 
 chrome.runtime.onInstalled.addListener(async ({ reason }) => {
-  await createMenus();
+  await Promise.all([ensureStoragePrivacy(), createMenus(), applyToolbarBehavior(), applyActionIcon()]);
   if (reason === "install") {
-    await chrome.tabs.create({ url: chrome.runtime.getURL("onboarding.html?first=1") });
+    try {
+      await chrome.runtime.openOptionsPage();
+    } catch (error) {
+      console.warn("Could not open Tabs2Notion settings through openOptionsPage; falling back to a tab", error);
+      await chrome.tabs.create({ url: chrome.runtime.getURL("onboarding.html") });
+    }
   }
 });
 
-chrome.runtime.onStartup.addListener(createMenus);
+chrome.runtime.onStartup.addListener(async () => {
+  await Promise.all([ensureStoragePrivacy(), createMenus(), applyToolbarBehavior(), applyActionIcon()]);
+});
+
+chrome.storage.onChanged.addListener((changes, areaName) => {
+  if (areaName === "local" && changes.toolbarAction) applyToolbarBehavior().catch(console.warn);
+});
+
 chrome.tabs.onActivated.addListener(async () => refreshContextMenuState());
 chrome.tabs.onHighlighted.addListener(async () => refreshContextMenuState());
 chrome.tabs.onUpdated.addListener(async (_tabId, changeInfo, tab) => {
   if (tab.active && (changeInfo.url || changeInfo.status === "complete")) await refreshContextMenuState(tab);
+});
+
+chrome.action.onClicked.addListener(async (tab) => {
+  try {
+    const settings = await getSettings();
+    if (settings.toolbarAction && settings.toolbarAction !== "menu") {
+      await startOperation(settings.toolbarAction, tab || null);
+    }
+  } catch (error) {
+    console.error("Tabs2Notion toolbar action failed", error);
+  }
 });
 
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
@@ -120,3 +149,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
     await chrome.windows.create({ url: operationUrl, type: "popup", width: 460, height: 440, focused: true });
   }
 });
+
+applyToolbarBehavior().catch(console.warn);
+ensureStoragePrivacy().catch(console.warn);
+applyActionIcon().catch(console.warn);

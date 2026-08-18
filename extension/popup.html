@@ -8,25 +8,41 @@
 </head>
 <body>
   <main class="popup-shell">
-    <div class="row-between" style="padding:4px 6px 10px">
-      <div class="brand"><img src="icons/icon32.png" alt=""><span class="brand-name">Tabs2Notion</span></div>
-      <button id="settingsBtn" class="ghost" title="Settings" aria-label="Settings">⚙</button>
-    </div>
-    <div id="connectionState" class="subtle" style="padding:0 8px 8px"></div>
-    <div class="menu">
-      <button data-action="current-window">Send all tabs in this window</button>
-      <button id="groupBtn" data-action="current-group">Send all tabs in this tab group</button>
-      <button id="selectedBtn" data-action="selected">Send selected tabs</button>
-      <div class="divider"></div>
-      <button data-action="current-tab">Send only this tab</button>
-      <button data-action="except-current">Send all tabs except this tab</button>
-      <button id="leftBtn" data-action="left">Send tabs on the left</button>
-      <button data-action="right">Send tabs on the right</button>
-      <button data-action="all-windows">Send all tabs from all windows</button>
-      <div class="divider"></div>
-      <button id="excludeBtn">Exclude current site from Tabs2Notion</button>
-      <button id="dashboardBtn">Open Tabs2Notion</button>
-    </div>
+    <section class="card app-surface stack" style="padding:14px">
+      <div class="row-between">
+        <div class="brand"><img src="icons/icon32.png" alt=""><span class="brand-name">Tabs2Notion</span></div>
+        <button id="settingsBtn" class="ghost icon-button" title="Settings" aria-label="Settings">⚙</button>
+      </div>
+
+      <div class="row-between wrap">
+        <div id="connectionState" class="badge neutral"><span class="badge-dot"></span><span>Checking connection…</span></div>
+      </div>
+
+      <div id="defaultsSummary" class="summary-card" hidden>
+        <div class="row-between" style="align-items:flex-start">
+          <div>
+            <div style="font-weight:760; margin-bottom:4px">Using defaults</div>
+            <div class="subtle">Quick actions can save instantly without opening the destination picker.</div>
+          </div>
+        </div>
+        <div id="defaultsList" class="summary-list"></div>
+      </div>
+
+      <div class="menu">
+        <button data-action="current-window"><span class="menu-icon">▣</span><span class="menu-label">Send all tabs in this window</span><span class="menu-right">↵</span></button>
+        <button id="groupBtn" data-action="current-group"><span class="menu-icon">◫</span><span class="menu-label">Send all tabs in this tab group</span></button>
+        <button id="selectedBtn" data-action="selected"><span class="menu-icon">⬚</span><span class="menu-label">Send selected tabs</span></button>
+        <div class="divider"></div>
+        <button data-action="current-tab"><span class="menu-icon">◻</span><span class="menu-label">Send only this tab</span></button>
+        <button data-action="except-current"><span class="menu-icon">⊖</span><span class="menu-label">Send all tabs except this tab</span></button>
+        <button id="leftBtn" data-action="left"><span class="menu-icon">←</span><span class="menu-label">Send tabs on the left</span></button>
+        <button data-action="right"><span class="menu-icon">→</span><span class="menu-label">Send tabs on the right</span></button>
+        <button data-action="all-windows"><span class="menu-icon">⧉</span><span class="menu-label">Send all tabs from all windows</span></button>
+        <div class="divider"></div>
+        <button id="excludeBtn"><span class="menu-icon">⊘</span><span class="menu-label">Exclude current site from Tabs2Notion</span></button>
+        <button id="dashboardBtn"><span class="menu-icon">⚙</span><span class="menu-label">Open Tabs2Notion settings</span></button>
+      </div>
+    </section>
   </main>
   <script type="module" src="js/popup.js"></script>
 </body>

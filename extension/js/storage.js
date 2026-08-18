@@ -1,14 +1,21 @@
-import { DEFAULT_OAUTH_BACKEND } from "./config.js";
-
 const DEFAULTS = {
-  oauthBackendUrl: DEFAULT_OAUTH_BACKEND,
   workspaces: {},
   recentTargets: {},
   lastTargetByWorkspace: {},
   lastWorkspaceId: null,
   excludedHosts: [],
-  closeTabsAfterSave: false
+  closeTabsAfterSave: false,
+  defaultWorkspaceId: null,
+  defaultTarget: null,
+  useDefaultsWithoutDialog: false,
+  toolbarAction: "menu"
 };
+
+export async function ensureStoragePrivacy() {
+  if (chrome.storage?.local?.setAccessLevel) {
+    await chrome.storage.local.setAccessLevel({ accessLevel: "TRUSTED_CONTEXTS" });
+  }
+}
 
 export async function getSettings() {
   const stored = await chrome.storage.local.get(Object.keys(DEFAULTS));
@@ -35,16 +42,23 @@ export async function removeWorkspace(workspaceId) {
   const settings = await getSettings();
   const nextWorkspaces = { ...settings.workspaces };
   delete nextWorkspaces[workspaceId];
+
   const nextRecent = { ...settings.recentTargets };
   delete nextRecent[workspaceId];
+
   const nextLast = { ...settings.lastTargetByWorkspace };
   delete nextLast[workspaceId];
+
   const remainingIds = Object.keys(nextWorkspaces);
+  const removingDefault = settings.defaultWorkspaceId === workspaceId;
+
   await setSettings({
     workspaces: nextWorkspaces,
     recentTargets: nextRecent,
     lastTargetByWorkspace: nextLast,
-    lastWorkspaceId: settings.lastWorkspaceId === workspaceId ? (remainingIds[0] || null) : settings.lastWorkspaceId
+    lastWorkspaceId: settings.lastWorkspaceId === workspaceId ? (remainingIds[0] || null) : settings.lastWorkspaceId,
+    defaultWorkspaceId: removingDefault ? null : settings.defaultWorkspaceId,
+    defaultTarget: removingDefault ? null : settings.defaultTarget
   });
 }
 

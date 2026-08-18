@@ -3,36 +3,65 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Set up Tabs2Notion</title>
+  <title>Tabs2Notion settings</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <main class="shell stack">
-    <div class="brand"><img src="icons/icon48.png" alt=""><span class="brand-name">Tabs2Notion</span></div>
-    <div>
-      <h1>Send open tabs straight to Notion.</h1>
-      <p class="subtle">Tabs2Notion uses Notion OAuth. Your Notion password is entered only on Notion's own authorization page; the extension never receives it.</p>
-    </div>
+    <section class="card hero-card app-surface">
+      <div class="hero-copy">
+        <div class="brand"><img src="icons/icon48.png" alt=""><span class="brand-name">Tabs2Notion</span></div>
+        <h1>Save your tabs to Notion.</h1>
+        <p class="subtle">Connect Notion once, choose your defaults, and then save a single tab, a group, a whole window, or everything at once.</p>
+        <div class="hero-badges">
+          <span class="badge connected"><span class="badge-dot"></span><span id="heroConnectionBadge">Not connected</span></span>
+          <span class="badge soft">Right-click menu + toolbar actions</span>
+          <span class="badge neutral">Instant save or review before saving</span>
+        </div>
+      </div>
+      <div class="stack" style="min-width:220px">
+        <div class="callout">
+          <div class="callout-title"><span class="dot">i</span><span>Good default setup</span></div>
+          <div class="subtle">Connect Notion, choose a workspace and default database, then enable <strong>Use defaults without showing dialog</strong> for one-click saving.</div>
+        </div>
+      </div>
+    </section>
 
-    <section class="card stack">
-      <h2>1. OAuth backend</h2>
-      <p class="subtle" style="margin:0">A tiny companion backend is required because Notion's OAuth token exchange requires a client secret, which cannot safely be embedded in a Chrome extension.</p>
+    <section id="pinPromptCard" class="card pin-card stack" hidden>
+      <div>
+        <h2>Pin Tabs2Notion for quick access</h2>
+        <p class="subtle" style="margin:0">Chrome keeps new extensions inside the Extensions menu by default. Pin Tabs2Notion so the toolbar action is always one click away.</p>
+      </div>
+      <div class="pin-steps" aria-label="How to pin Tabs2Notion">
+        <span class="pin-step">1. Click the Extensions puzzle-piece icon</span>
+        <span class="pin-step">2. Find Tabs2Notion</span>
+        <span class="pin-step">3. Click its pin icon</span>
+      </div>
+      <div class="row wrap">
+        <button id="checkPinBtn" class="secondary">Check pin status</button>
+        <span id="pinStatus" class="subtle"></span>
+      </div>
+    </section>
+
+    <section id="developerBackendCard" class="card stack" hidden>
+      <h2>Developer setup</h2>
+      <p class="subtle" style="margin:0">This only appears in development builds without a bundled OAuth backend.</p>
       <label class="stack" style="gap:6px">
-        <span class="subtle">Cloudflare Worker URL</span>
-        <input id="backendUrl" class="text-input" placeholder="https://tabs2notion.yourname.workers.dev">
+        <span class="subtle">OAuth Worker URL</span>
+        <input id="backendUrl" class="text-input" placeholder="https://tabs2notion-oauth.yourname.workers.dev">
       </label>
-      <div class="row">
+      <div class="row wrap">
         <button id="saveBackendBtn" class="secondary">Save backend URL</button>
-        <a href="help.html#oauth" target="_blank">Setup instructions</a>
+        <a href="help.html#oauth" target="_blank">Developer setup instructions</a>
       </div>
       <div id="backendStatus" class="subtle"></div>
     </section>
 
     <section class="card stack">
-      <div class="row-between">
+      <div class="row-between wrap">
         <div>
-          <h2>2. Connect Notion</h2>
-          <div class="subtle">Connect one or more workspaces. You choose which pages/databases Tabs2Notion may access in Notion's page picker.</div>
+          <h2>Notion connection</h2>
+          <div class="subtle">Choose which workspaces, pages, and databases Tabs2Notion may access during Notion authorization.</div>
         </div>
         <button id="connectBtn" class="primary">Connect Notion</button>
       </div>
@@ -41,11 +70,101 @@
     </section>
 
     <section class="card stack">
-      <h2>3. Use it</h2>
-      <p style="margin:0">Click the Tabs2Notion toolbar icon, or right-click the extension/page/tab and choose a tab-selection command. A small destination window opens so you can choose the workspace and Notion database before saving.</p>
-      <div class="row">
+      <h2>Default destination</h2>
+      <div class="setting-list">
+        <label class="setting-row compact">
+          <span class="setting-icon">🌐</span>
+          <span class="setting-copy">
+            <div class="setting-title">Default workspace</div>
+            <div class="subtle">Used for instant saving and as the initial workspace in the selector.</div>
+            <span class="setting-control" style="display:block; margin-top:10px"><select id="defaultWorkspaceSelect" class="text-input"></select></span>
+          </span>
+        </label>
+
+        <label class="setting-row compact">
+          <span class="setting-icon">🗂</span>
+          <span class="setting-copy">
+            <div class="setting-title">Default database</div>
+            <div class="subtle">The destination used when “Use defaults without showing dialog” is enabled.</div>
+            <span class="setting-control" style="display:block; margin-top:10px"><select id="defaultDatabaseSelect" class="text-input"></select></span>
+          </span>
+        </label>
+      </div>
+    </section>
+
+    <section class="card stack">
+      <h2>Default behavior</h2>
+      <div class="setting-list">
+        <label class="setting-row">
+          <span class="setting-icon">✓</span>
+          <span class="setting-copy">
+            <div class="setting-title">Close tabs after saving</div>
+            <div class="subtle">Close only the tabs that were successfully saved to Notion.</div>
+          </span>
+          <span class="switch"><input id="closeTabsDefault" type="checkbox"><span class="slider"></span></span>
+        </label>
+
+        <label class="setting-row">
+          <span class="setting-icon">⚡</span>
+          <span class="setting-copy">
+            <div class="setting-title">Use defaults without showing dialog</div>
+            <div class="subtle">Skip the selection dialog and save immediately using the defaults above.</div>
+          </span>
+          <span class="switch"><input id="skipDialogDefault" type="checkbox"><span class="slider"></span></span>
+        </label>
+
+        <label class="setting-row compact">
+          <span class="setting-icon">☝</span>
+          <span class="setting-copy">
+            <div class="setting-title">Icon click action</div>
+            <div class="subtle">Choose what happens when you click the pinned Tabs2Notion toolbar icon.</div>
+            <span class="setting-control" style="display:block; margin-top:10px">
+              <select id="toolbarActionSelect" class="text-input">
+                <option value="menu">Open the action menu</option>
+                <option value="current-window">Send all tabs in this window</option>
+                <option value="current-group">Send tabs in the current tab group</option>
+                <option value="selected">Send selected tabs</option>
+                <option value="current-tab">Send only the current tab</option>
+                <option value="except-current">Send all tabs except the current tab</option>
+                <option value="left">Send tabs on the left</option>
+                <option value="right">Send tabs on the right</option>
+                <option value="all-windows">Send all tabs from all windows</option>
+              </select>
+            </span>
+          </span>
+        </label>
+      </div>
+
+      <div class="callout">
+        <div class="callout-title"><span class="dot">i</span><span>How it works</span></div>
+        <div class="subtle">If instant saving is enabled, the chosen action saves tabs right away using the default workspace and database. Otherwise, Tabs2Notion opens the destination picker so you can choose where to save.</div>
+      </div>
+
+      <div id="defaultStatus" class="subtle"></div>
+    </section>
+
+    <section class="card stack">
+      <h2>How to use Tabs2Notion</h2>
+      <div class="how-grid">
+        <div class="step-card">
+          <div class="step-number">1</div>
+          <h3>Connect Notion</h3>
+          <p class="subtle">Authorize Tabs2Notion to access the Notion workspace(s) and databases you want to use.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-number">2</div>
+          <h3>Choose tabs or windows</h3>
+          <p class="subtle">Use the pinned icon or the flat right-click menu to choose which tabs you want to send.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-number">3</div>
+          <h3>Save instantly or review</h3>
+          <p class="subtle">Use defaults for one-click saving, or open the selector to choose the destination before sending.</p>
+        </div>
+      </div>
+      <div class="row wrap">
         <button id="openDashboardBtn" class="secondary">Open Tabs2Notion</button>
-        <a href="help.html" target="_blank">Help</a>
+        <a href="help.html" target="_blank">Open help</a>
       </div>
     </section>
   </main>
