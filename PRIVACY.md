@@ -2,72 +2,69 @@
 
 **Effective date: 18 August 2026**
 
-Tabs2Notion is a Chrome extension that sends browser tabs to a Notion database selected by the user.
+Tabs2Notion is a Chrome extension that lets you send user-selected browser tabs to a Notion database. This policy explains what data Tabs2Notion handles, why it is needed, and where it goes.
 
 ## Data Tabs2Notion handles
 
-Tabs2Notion handles only the information needed to provide its tab-to-Notion functionality:
+Tabs2Notion may handle the following data when you use the extension:
 
-- **Tab metadata:** the title and URL of tabs selected by a Tabs2Notion command.
-- **Notion authentication information:** OAuth access and refresh tokens issued by Notion.
-- **Notion workspace metadata:** workspace identifiers, workspace names/icons, and database identifiers/titles needed to show destinations.
-- **Extension settings:** default workspace/database, close-tabs preference, toolbar action, recent destinations, and explicitly excluded domains.
+- **Browser tab information:** the titles and URLs of the tabs selected by the action you invoke (for example, the current tab, selected tabs, a tab group, a window, or all windows).
+- **Notion authentication information:** OAuth access and refresh tokens, workspace identifiers, and basic workspace metadata returned by Notion after you authorize Tabs2Notion.
+- **Notion destination metadata:** database/data-source identifiers and names needed to let you choose where tabs are saved.
+- **Local settings:** your selected defaults, recent destinations, excluded domains, toolbar action, and whether successfully saved tabs should be closed.
 
-## How data is used
+Tabs2Notion does **not** read the body content of webpages, passwords entered into webpages, cookies, form contents, or your full browsing history. It only processes the tabs selected by a Tabs2Notion action.
 
-When you invoke a save command, the extension sends the selected tab titles and URLs **directly to the Notion API** so that Notion can create pages in the database you chose.
+## How the data is used
 
-Tabs2Notion does not continuously collect browsing activity and does not send your full browsing history anywhere. It reads open-tab metadata only as needed to execute commands you initiate.
+The data above is used only to provide Tabs2Notion's user-facing functionality:
 
-## OAuth service
+- Tab titles and URLs are converted into new pages/rows in the Notion database you select.
+- Notion credentials are used to authenticate requests to your authorized Notion workspace.
+- Database metadata is used to display and remember destinations.
+- Local settings are used to apply your chosen behavior.
 
-Notion's public OAuth flow requires a confidential client secret, which cannot safely be embedded in a Chrome extension. Tabs2Notion therefore uses a small publisher-operated OAuth service hosted on Cloudflare Workers.
+Tabs2Notion does not use this data for advertising, profiling, creditworthiness, analytics, or unrelated purposes.
 
-The OAuth service is used only to:
+## Where data is sent
 
-1. start the Notion authorization flow;
-2. exchange Notion authorization codes for OAuth tokens; and
-3. refresh OAuth tokens.
+Normal saving traffic goes **directly from the Chrome extension to Notion's API over HTTPS**. When you save tabs, Notion receives the tab titles and URLs needed to create the requested pages.
 
-The OAuth service is **not used as a proxy for saved tab titles, tab URLs, or Notion database content**. The service does not maintain an application database of users or saved tabs.
+Tabs2Notion also uses a small publisher-operated OAuth service hosted on Cloudflare Workers. That service is used only for Notion OAuth authorization-code exchange and token refresh. It transiently processes OAuth authorization codes and token responses so that the Notion client secret does not need to be embedded in the public extension. It does not proxy tab titles, tab URLs, database contents, or normal Notion API traffic, and Tabs2Notion does not intentionally persist OAuth tokens on that backend.
 
-Cloudflare may process standard network and security metadata as part of operating its infrastructure, subject to Cloudflare's own policies.
+Cloudflare provides the infrastructure on which the OAuth service runs, and Notion provides the destination service chosen by the user. Their own terms and privacy practices apply to their processing of data. Cloudflare may process standard network and operational metadata required to deliver and secure the Worker service.
 
-## Local storage
+## Storage and retention
 
-Notion tokens and Tabs2Notion settings are stored in the extension's local Chrome storage. The extension restricts its local storage to trusted extension contexts.
+OAuth credentials and extension settings are stored in `chrome.storage.local` in the user's Chrome profile. They remain there until the user disconnects the workspace, removes the extension, clears the extension's storage, or Chrome removes that profile data.
 
-Stored connection data remains in your Chrome profile until you disconnect the workspace, clear the extension's data, or uninstall Tabs2Notion.
+The Tabs2Notion OAuth backend does not intentionally maintain a database of users, browsing activity, saved tabs, Notion pages, or OAuth tokens.
 
-## Third parties
+## Data sharing and sale
 
-Tabs2Notion relies on:
-
-- **Notion**, to authenticate your account and store the pages you explicitly send.
-- **Cloudflare Workers**, to host the OAuth code-exchange/refresh service.
-
-Your use of those services is also governed by their respective privacy policies.
-
-## Data sale, advertising, analytics, and profiling
-
-Tabs2Notion:
-
-- does **not** sell user data;
-- does **not** use user data for advertising;
-- does **not** use tab data for analytics or profiling;
-- does **not** transfer tab data to data brokers;
-- does **not** use browsing data for purposes unrelated to the extension's single purpose.
+Tabs2Notion does not sell user data. It does not transfer user data for advertising, retargeting, data brokerage, or other unrelated purposes. Data is transferred only as necessary to provide the extension's single purpose, to the services described above, or where required by law or necessary for security.
 
 ## Security
 
-The Notion OAuth client secret is kept only as a server-side Cloudflare Worker secret and is never included in the extension package. Tabs2Notion requests only the browser and Notion permissions required for its functionality.
+Tabs2Notion uses HTTPS for communications with Notion and the OAuth service. The Notion OAuth client secret is kept on the publisher-operated backend and is not embedded in the Chrome extension. Browser-internal URLs such as `chrome://` pages are not sent to Notion.
 
-## Changes to this policy
+## Limited Use disclosure
 
-Material changes to this policy will be published in this repository and on the hosted privacy-policy page.
+Tabs2Notion's use of information received from Chrome APIs complies with the Chrome Web Store User Data Policy, including its Limited Use requirements. Data obtained through Chrome permissions is used only to provide or improve Tabs2Notion's user-facing tab-to-Notion functionality and is not used for personalized advertising or unrelated purposes.
 
-## Contact and support
+## Your controls
 
-For questions, privacy requests, or bug reports, use the project's GitHub issue tracker:
+You can:
+
+- choose exactly which tab set to send;
+- choose which Notion workspace/pages/databases to authorize through Notion;
+- disconnect a Notion workspace from Tabs2Notion settings;
+- exclude domains from tab-saving actions;
+- choose whether saved tabs remain open or are closed;
+- remove the extension to delete its locally stored extension data from that Chrome profile.
+
+## Contact
+
+For privacy questions, bug reports, or data-handling concerns, open an issue in the Tabs2Notion GitHub repository:
 
 https://github.com/nikolaskaralis/Tabs2Notion/issues
