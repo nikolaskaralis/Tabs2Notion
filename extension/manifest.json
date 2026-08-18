@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Tabs2Notion",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Send one tab, a tab group, a window, or all open tabs to a Notion database.",
   "minimum_chrome_version": "123",
   "permissions": [
