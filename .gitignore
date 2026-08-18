@@ -1,1 +1,3 @@
 .DS_Store
+dist/
+backend/cloudflare-worker/wrangler.toml
