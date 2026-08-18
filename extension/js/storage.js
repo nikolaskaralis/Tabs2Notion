@@ -7,7 +7,11 @@ const DEFAULTS = {
   lastTargetByWorkspace: {},
   lastWorkspaceId: null,
   excludedHosts: [],
-  closeTabsAfterSave: false
+  closeTabsAfterSave: false,
+  defaultWorkspaceId: null,
+  defaultTarget: null,
+  useDefaultsWithoutDialog: false,
+  toolbarAction: "menu"
 };
 
 export async function getSettings() {
@@ -40,11 +44,14 @@ export async function removeWorkspace(workspaceId) {
   const nextLast = { ...settings.lastTargetByWorkspace };
   delete nextLast[workspaceId];
   const remainingIds = Object.keys(nextWorkspaces);
+  const removingDefault = settings.defaultWorkspaceId === workspaceId;
   await setSettings({
     workspaces: nextWorkspaces,
     recentTargets: nextRecent,
     lastTargetByWorkspace: nextLast,
-    lastWorkspaceId: settings.lastWorkspaceId === workspaceId ? (remainingIds[0] || null) : settings.lastWorkspaceId
+    lastWorkspaceId: settings.lastWorkspaceId === workspaceId ? (remainingIds[0] || null) : settings.lastWorkspaceId,
+    defaultWorkspaceId: removingDefault ? null : settings.defaultWorkspaceId,
+    defaultTarget: removingDefault ? null : settings.defaultTarget
   });
 }
 
