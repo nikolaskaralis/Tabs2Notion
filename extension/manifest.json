@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Tabs2Notion",
-  "version": "0.1.2",
+  "version": "1.0.0",
   "description": "Send one tab, selected tabs, tab groups, windows, or all open tabs directly to a Notion database.",
   "minimum_chrome_version": "123",
   "homepage_url": "https://github.com/nikolaskaralis/Tabs2Notion",
