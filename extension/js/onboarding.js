@@ -1,15 +1,25 @@
-import { connectWorkspace, setOAuthBackendUrl } from "./auth.js";
+import {
+  connectWorkspace,
+  getOAuthBackendUrl,
+  hasBundledOAuthBackend,
+  setOAuthBackendUrl
+} from "./auth.js";
 import { getSettings, removeWorkspace } from "./storage.js";
 
+const developerBackendCard = document.getElementById("developerBackendCard");
 const backendUrl = document.getElementById("backendUrl");
 const backendStatus = document.getElementById("backendStatus");
 const connectStatus = document.getElementById("connectStatus");
 const workspaceList = document.getElementById("workspaceList");
 const connectBtn = document.getElementById("connectBtn");
+const saveBackendBtn = document.getElementById("saveBackendBtn");
 
 async function render() {
   const settings = await getSettings();
-  backendUrl.value = settings.oauthBackendUrl || "";
+  const bundledBackend = hasBundledOAuthBackend();
+  developerBackendCard.hidden = bundledBackend;
+  backendUrl.value = bundledBackend ? await getOAuthBackendUrl() : (settings.oauthBackendUrl || "");
+
   const workspaces = Object.values(settings.workspaces);
   workspaceList.replaceChildren();
 
@@ -61,7 +71,7 @@ async function render() {
   }
 }
 
-document.getElementById("saveBackendBtn").addEventListener("click", async () => {
+saveBackendBtn.addEventListener("click", async () => {
   try {
     const saved = await setOAuthBackendUrl(backendUrl.value);
     backendStatus.textContent = saved ? `Saved ${saved}` : "Backend URL cleared.";
@@ -74,7 +84,7 @@ connectBtn.addEventListener("click", async () => {
   connectBtn.disabled = true;
   connectStatus.textContent = "Opening Notion authorization…";
   try {
-    await setOAuthBackendUrl(backendUrl.value);
+    if (!hasBundledOAuthBackend()) await setOAuthBackendUrl(backendUrl.value);
     const workspace = await connectWorkspace();
     connectStatus.textContent = `Connected ${workspace.workspace_name || "Notion workspace"}.`;
     await render();
