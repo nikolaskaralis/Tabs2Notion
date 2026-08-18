@@ -45,8 +45,10 @@ End users do not configure the backend. They install Tabs2Notion, click **Connec
 3. Enable **Developer mode**.
 4. Click **Load unpacked**.
 5. Select the `extension/` directory.
-6. Open Tabs2Notion Settings and click **Connect Notion**.
-7. In Notion's authorization picker, grant access to the databases/pages you want Tabs2Notion to use.
+6. Tabs2Notion automatically opens its Settings page on first install.
+7. If Chrome has not pinned the extension, Settings shows a pin prompt with the exact toolbar steps.
+8. Click **Connect Notion**.
+9. In Notion's authorization picker, grant access to the databases/pages you want Tabs2Notion to use.
 
 ## Notion database compatibility
 
