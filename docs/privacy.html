@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tabs2Notion Privacy Policy</title>
+  <style>
+    :root { color-scheme: light dark; font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    body { margin: 0; }
+    main { max-width: 760px; margin: 0 auto; padding: 48px 24px 72px; line-height: 1.6; }
+    h1 { font-size: 2rem; margin-bottom: .25rem; }
+    h2 { margin-top: 2rem; }
+    .muted { opacity: .7; }
+    a { color: inherit; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Tabs2Notion Privacy Policy</h1>
+  <p class="muted"><strong>Effective date:</strong> 18 August 2026</p>
+  <p>Tabs2Notion is a Chrome extension that sends browser tabs to a Notion database selected by the user.</p>
+
+  <h2>Data Tabs2Notion handles</h2>
+  <ul>
+    <li><strong>Tab metadata:</strong> the title and URL of tabs selected by a Tabs2Notion command.</li>
+    <li><strong>Notion authentication information:</strong> OAuth access and refresh tokens issued by Notion.</li>
+    <li><strong>Notion workspace metadata:</strong> workspace identifiers, workspace names/icons, and database identifiers/titles needed to show destinations.</li>
+    <li><strong>Extension settings:</strong> default workspace/database, close-tabs preference, toolbar action, recent destinations, and explicitly excluded domains.</li>
+  </ul>
+
+  <h2>How data is used</h2>
+  <p>When you invoke a save command, the extension sends the selected tab titles and URLs <strong>directly to the Notion API</strong> so that Notion can create pages in the database you chose.</p>
+  <p>Tabs2Notion does not continuously collect browsing activity and does not send your full browsing history anywhere. It reads open-tab metadata only as needed to execute commands you initiate.</p>
+
+  <h2>OAuth service</h2>
+  <p>Notion's public OAuth flow requires a confidential client secret, which cannot safely be embedded in a Chrome extension. Tabs2Notion therefore uses a small publisher-operated OAuth service hosted on Cloudflare Workers.</p>
+  <p>The service is used only to start Notion authorization, exchange authorization codes for OAuth tokens, and refresh OAuth tokens. It is <strong>not used as a proxy for saved tab titles, tab URLs, or Notion database content</strong>, and it does not maintain an application database of users or saved tabs.</p>
+  <p>Cloudflare may process standard network and security metadata as part of operating its infrastructure, subject to Cloudflare's own policies.</p>
+
+  <h2>Local storage</h2>
+  <p>Notion tokens and Tabs2Notion settings are stored in the extension's local Chrome storage. The extension restricts its local storage to trusted extension contexts. Stored connection data remains in your Chrome profile until you disconnect the workspace, clear extension data, or uninstall Tabs2Notion.</p>
+
+  <h2>Third parties</h2>
+  <ul>
+    <li><strong>Notion</strong>, to authenticate your account and store pages you explicitly send.</li>
+    <li><strong>Cloudflare Workers</strong>, to host the OAuth code-exchange/refresh service.</li>
+  </ul>
+
+  <h2>Data sale, advertising, analytics, and profiling</h2>
+  <p>Tabs2Notion does not sell user data, use user data for advertising, transfer tab data to data brokers, use tab data for analytics or profiling, or use browsing data for purposes unrelated to the extension's single purpose.</p>
+
+  <h2>Security</h2>
+  <p>The Notion OAuth client secret is kept only as a server-side Cloudflare Worker secret and is never included in the extension package. Tabs2Notion requests only the browser and Notion permissions required for its functionality.</p>
+
+  <h2>Changes to this policy</h2>
+  <p>Material changes will be published in the project's public repository and on this page.</p>
+
+  <h2>Contact and support</h2>
+  <p>For questions, privacy requests, or bug reports, use the <a href="https://github.com/nikolaskaralis/Tabs2Notion/issues">Tabs2Notion GitHub issue tracker</a>.</p>
+</main>
+</body>
+</html>
