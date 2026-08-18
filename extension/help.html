@@ -4,29 +4,33 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Tabs2Notion Help</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/icon32.png">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <main class="shell stack">
-    <div class="brand"><img src="icons/icon48.png" alt=""><span class="brand-name">Tabs2Notion Help</span></div>
+    <div class="brand"><img src="icons/icon128.png" width="48" height="48" alt="Tabs2Notion icon"><span class="brand-name">Tabs2Notion Help</span></div>
     <section class="card stack">
       <h2>How saving works</h2>
-      <p>Choose a tab command from the toolbar popup or context menu. Tabs2Notion captures the matching tab titles and URLs, then opens a small destination window. Pick a connected workspace and an accessible Notion database, then save.</p>
+      <p>Choose a tab command from the toolbar popup or context menu. Tabs2Notion captures the matching tab titles and URLs, then either saves immediately using your configured defaults or opens a small destination window. Pick a connected workspace and an accessible Notion database, then save.</p>
       <p>If the target database contains a URL property, Tabs2Notion writes the tab URL there. Otherwise it preserves the URL as a clickable link inside the new Notion page.</p>
     </section>
     <section id="oauth" class="card stack">
-      <h2>OAuth backend setup</h2>
-      <p>Notion public OAuth requires a client ID and client secret when exchanging authorization codes. A browser extension cannot safely contain that secret, so Tabs2Notion includes a minimal Cloudflare Worker under <code>backend/cloudflare-worker</code>.</p>
-      <p>Follow the repository README to create a Notion public connection, deploy the Worker, set its secrets, register the Worker callback URL in Notion, then paste the Worker URL into Tabs2Notion settings.</p>
+      <h2>Notion connection</h2>
+      <p>Tabs2Notion uses Notion public OAuth. The release build already knows the publisher-hosted authentication service, so normal users only need to click <strong>Connect Notion</strong>. No Worker URL, API token, or client secret needs to be entered.</p>
     </section>
     <section class="card stack">
       <h2>Workspace/database access</h2>
       <p>During Notion OAuth, Notion shows a page picker. Only pages/databases you grant to Tabs2Notion are returned by the Notion Search API. If a database is missing, reconnect the workspace and grant access to that database or a parent page containing it.</p>
     </section>
     <section class="card stack">
+      <h2>Defaults</h2>
+      <p>In Settings you can choose a default workspace/database, whether successfully saved tabs should close, whether actions should skip the destination dialog, and what happens when you click the pinned Tabs2Notion icon.</p>
+    </section>
+    <section class="card stack">
       <h2>Tab-selection commands</h2>
       <p><strong>Current window:</strong> every sendable tab in the active window. <strong>Current group:</strong> tabs sharing the active tab's Chrome group. <strong>Selected:</strong> Chrome-highlighted tabs. <strong>Left/right:</strong> tabs relative to the active tab. <strong>All windows:</strong> every sendable open tab.</p>
-      <p>Chrome internal pages such as <code>chrome://</code> URLs are skipped. Excluded domains are also skipped. Tabs are only closed if you explicitly enable “Close successfully saved tabs” in the destination window.</p>
+      <p>Chrome internal pages such as <code>chrome://</code> URLs are skipped. Excluded domains are also skipped. Tabs are only closed according to your configured close-tabs behavior.</p>
     </section>
   </main>
 </body>
