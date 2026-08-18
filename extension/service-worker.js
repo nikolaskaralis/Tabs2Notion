@@ -1,6 +1,7 @@
 import { ACTIONS, hostnameForUrl } from "./js/tabs.js";
 import { startOperation } from "./js/operations.js";
-import { getSettings, toggleExcludedHost } from "./js/storage.js";
+import { applyActionIcon } from "./js/icon.js";
+import { ensureStoragePrivacy, getSettings, toggleExcludedHost } from "./js/storage.js";
 
 const MENU = {
   OPEN: "t2n-open",
@@ -88,14 +89,14 @@ async function refreshContextMenuState(tab = null) {
 }
 
 chrome.runtime.onInstalled.addListener(async ({ reason }) => {
-  await Promise.all([createMenus(), applyToolbarBehavior()]);
+  await Promise.all([ensureStoragePrivacy(), createMenus(), applyToolbarBehavior(), applyActionIcon()]);
   if (reason === "install") {
     await chrome.tabs.create({ url: chrome.runtime.getURL("onboarding.html?first=1") });
   }
 });
 
 chrome.runtime.onStartup.addListener(async () => {
-  await Promise.all([createMenus(), applyToolbarBehavior()]);
+  await Promise.all([ensureStoragePrivacy(), createMenus(), applyToolbarBehavior(), applyActionIcon()]);
 });
 
 chrome.storage.onChanged.addListener((changes, areaName) => {
@@ -145,3 +146,5 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 });
 
 applyToolbarBehavior().catch(console.warn);
+ensureStoragePrivacy().catch(console.warn);
+applyActionIcon().catch(console.warn);
