@@ -1,190 +1,119 @@
 # Tabs2Notion
 
-A Chrome Manifest V3 extension for sending open browser tabs to a Notion database. It is designed as a bulk companion to Notion's normal single-page web clipper.
+Tabs2Notion is a Chrome Manifest V3 extension for sending one or many open browser tabs directly to a Notion database. It is a bulk companion to Notion's normal single-page clipping workflow.
 
-## What it does
+## Features
 
-The toolbar popup and right-click context menu expose OneTab-like tab-selection commands:
+From the toolbar or flat right-click menu you can send:
 
-- all tabs in the current window
-- all tabs in the current Chrome tab group
-- selected/highlighted tabs
-- only the current tab
-- all tabs except the current tab
-- tabs to the left
-- tabs to the right
-- all tabs from all windows
-- exclude/include the current domain
+- all tabs in the current window;
+- all tabs in the current Chrome tab group;
+- selected/highlighted tabs;
+- only the current tab;
+- all tabs except the current tab;
+- tabs to the left or right;
+- all tabs from all windows.
 
-After choosing a tab set, Tabs2Notion opens a compact destination window where you choose:
+You can also exclude domains from Tabs2Notion actions.
 
-- **Notion workspace**
-- **Notion database/data source**
-- whether to **close successfully saved tabs**
+Each tab becomes a new Notion page/database row using the browser tab title. If the destination has a URL property, Tabs2Notion writes the tab URL there; otherwise the URL is preserved as a clickable link in the page body.
 
-Each tab becomes one new database row. The row's title is the browser tab title. If the database has a URL property, Tabs2Notion automatically uses it; otherwise it puts the URL as a clickable link in the page body.
+## Defaults and one-click saving
 
-## Authentication architecture
+Settings let you configure:
 
-Tabs2Notion uses Notion's **public OAuth connection + REST API** architecture.
+- a default Notion workspace;
+- a default database/data source;
+- whether successfully saved tabs should close;
+- whether actions should skip the destination dialog and save immediately;
+- what happens when the pinned Tabs2Notion toolbar icon is clicked.
 
-A tiny OAuth backend is required because Notion's public OAuth token exchange and refresh requests require the connection's client secret. That secret must not be embedded in a public Chrome extension. The backend only performs OAuth code exchange / token refresh; it does **not** proxy normal Notion database traffic. After login, the extension calls `api.notion.com` directly with the user's workspace-scoped bearer token.
+If instant saving is enabled and a valid default destination exists, the selected tab action is executed without opening the database picker.
 
-Why not connect directly to Notion MCP from the extension? Notion's hosted MCP endpoint rejects Chrome extension origins (`chrome-extension://...`) and Notion's own MCP troubleshooting guidance says browser clients should perform token exchange server-side. Therefore direct MCP from a Chrome extension is not a supported backendless path for Tabs2Notion.
+## Authentication and architecture
 
-The project therefore has two pieces:
+Tabs2Notion uses Notion public OAuth plus the Notion REST API.
 
-1. `extension/` — captures tabs, presents the workspace/database picker, and calls the Notion REST API.
-2. `backend/cloudflare-worker/` — a minimal OAuth helper that holds the Notion client secret and performs only authorization-code exchange and refresh.
+The public extension cannot safely contain Notion's OAuth client secret, so the publisher operates a small Cloudflare Worker at the bundled production backend URL. The Worker is used only for OAuth authorization-code exchange and token refresh. Normal database search, schema inspection, and tab-saving requests go directly from the extension to `https://api.notion.com`.
 
-For a **public release**, you deploy this Worker once as the extension publisher. End users should not deploy anything themselves: they install Tabs2Notion, click **Connect Notion**, authorize the workspace, and use the extension.
+End users do not configure the backend. They install Tabs2Notion, click **Connect Notion**, authorize a workspace/pages in Notion, and use the extension.
 
-## 1. Create a Notion public connection
+## Install locally
 
-In the Notion Creator dashboard:
+1. Clone or download this repository.
+2. Open `chrome://extensions`.
+3. Enable **Developer mode**.
+4. Click **Load unpacked**.
+5. Select the `extension/` directory.
+6. Open Tabs2Notion Settings and click **Connect Notion**.
+7. In Notion's authorization picker, grant access to the databases/pages you want Tabs2Notion to use.
 
-1. Create a **Public connection**.
-2. For a public Chrome Web Store release choose the installation scope that allows **Any workspace**.
-3. Give the connection at least the capabilities needed to **read content** and **insert content**.
-4. You will add the exact OAuth redirect URI after deploying the Worker in the next section.
-5. Copy the connection's **client ID** and **client secret**.
+## Notion database compatibility
 
-During authorization, Notion presents its page picker. Users grant Tabs2Notion access only to the pages/databases they choose.
+Before saving, Tabs2Notion reads the selected data-source schema:
 
-## 2. Deploy the OAuth Worker
+- it locates the actual title property;
+- it prefers a URL property named `URL`, `Link`, `Website`, or `Source`, otherwise the first URL property;
+- if no URL property exists, it puts the source URL into the page body;
+- it leaves other properties untouched rather than guessing statuses, tags, relations, or custom fields.
 
-The backend is intentionally small and does not store Notion page/database content. The access and refresh tokens are returned to the extension through Chrome's OAuth redirect and stored in `chrome.storage.local` for that extension profile.
+Only ordinary `http://` and `https://` tabs are sendable. Browser-internal pages such as `chrome://extensions` are skipped.
 
-Using Cloudflare Wrangler:
+## Privacy
 
-```bash
-cd backend/cloudflare-worker
-cp wrangler.toml.example wrangler.toml
-npx wrangler deploy
-```
+Tabs2Notion processes the titles and URLs of the tabs explicitly selected by the user. Normal save traffic goes directly to Notion. The publisher-hosted backend is authentication-only and does not proxy normal tab-saving payloads.
 
-After the first deployment, note the Worker URL, for example:
+See [PRIVACY.md](PRIVACY.md) for the full privacy policy and Chrome Web Store Limited Use disclosure.
 
-```text
-https://tabs2notion-oauth.<your-subdomain>.workers.dev
-```
+## Development and validation
 
-Set the redirect URI in `wrangler.toml`:
-
-```toml
-[vars]
-OAUTH_REDIRECT_URI = "https://tabs2notion-oauth.<your-subdomain>.workers.dev/oauth/callback"
-```
-
-Add the **same exact URI** to the Notion public connection's OAuth redirect URIs.
-
-Then set the Worker secrets:
-
-```bash
-npx wrangler secret put NOTION_CLIENT_ID
-npx wrangler secret put NOTION_CLIENT_SECRET
-npx wrangler secret put STATE_SECRET
-```
-
-For `STATE_SECRET`, use a long random value, for example:
-
-```bash
-openssl rand -base64 48
-```
-
-Deploy once more:
-
-```bash
-npx wrangler deploy
-```
-
-Optional health check:
-
-```text
-https://tabs2notion-oauth.<your-subdomain>.workers.dev/health
-```
-
-## 3. Configure the extension build
-
-During local development, the onboarding page can accept the Worker URL manually.
-
-Before publishing to the Chrome Web Store, set the production Worker URL as `DEFAULT_OAUTH_BACKEND` in `extension/js/config.js`. This removes infrastructure setup from the end-user workflow. A public release should use one stable publisher-controlled backend URL.
-
-## 4. Load the Chrome extension locally
-
-1. Open `chrome://extensions`.
-2. Enable **Developer mode**.
-3. Click **Load unpacked**.
-4. Select the `extension/` directory.
-5. Tabs2Notion opens its setup page automatically.
-6. During development, paste your Worker base URL if `DEFAULT_OAUTH_BACKEND` has not yet been set.
-7. Click **Connect Notion**.
-8. Complete Notion's authorization flow and page/database picker.
-
-To connect another Notion workspace, click **Connect Notion** again from settings or **Connect another** in the Tabs2Notion dashboard. Authorizations are stored separately by Notion `workspace_id`.
-
-## 5. Use Tabs2Notion
-
-### Toolbar
-
-Click the Tabs2Notion icon in Chrome's extensions toolbar. Choose one of the tab-selection commands.
-
-### Context menu
-
-Right-click a web page, browser tab, or the extension action. Chrome may place the commands under a **Send tabs to Notion** submenu because Chrome limits top-level items in an extension action context menu.
-
-### Destination window
-
-The selector opens with:
-
-- a workspace dropdown
-- recent databases
-- all accessible databases
-- database search
-- a **Close successfully saved tabs** checkbox
-
-The most recently used destination is preselected for convenience, but the picker remains available for every send.
-
-## Database compatibility
-
-Tabs2Notion retrieves the target data source schema before saving.
-
-- It automatically locates the data source's `title` property.
-- It prefers a URL property named `URL`, `Link`, `Website`, or `Source`; otherwise it uses the first URL property.
-- If there is no URL property, the link is placed into the new page body.
-- Other database properties are left unchanged so Tabs2Notion can work across heterogeneous databases without guessing statuses, tags, relations, etc.
-
-## Rate limiting and bulk sends
-
-Tabs2Notion saves pages sequentially with spacing between creates and respects `Retry-After` on HTTP 429/529 responses. This makes large tab dumps slower than a local bookmark operation, but substantially more reliable.
-
-## Privacy/security notes
-
-- The extension requests the Chrome `tabs` permission because it must read tab titles and URLs.
-- Only ordinary `http://` and `https://` tabs are sent. Browser-internal pages such as `chrome://extensions` are skipped.
-- Excluded domains are stored locally in the extension profile.
-- OAuth tokens are stored in the local Chrome extension profile and are not intentionally synced through Chrome Sync.
-- The Notion OAuth client secret lives only in the Worker environment.
-- Normal Notion content/API traffic goes directly between the extension and `api.notion.com`; the OAuth Worker is not a Notion-content proxy.
-- OAuth `state` is HMAC-signed and expires after 10 minutes.
-- The Worker only accepts OAuth return URLs on Chrome's `*.chromiumapp.org` redirect domain (plus localhost for development).
-
-## Development checks
-
-From the project root:
+The extension has no bundler and uses locally shipped ES modules only.
 
 ```bash
 npm test
 npm run check
+npm run validate:release
 ```
 
-No build system is required for the extension; all JavaScript is bundled locally as ES modules to comply with Manifest V3's no-remotely-hosted-code model.
+## Build the Chrome Web Store ZIP
+
+From the repository root:
+
+```bash
+npm run package
+```
+
+This runs tests and release validation, then creates:
+
+```text
+dist/Tabs2Notion-<version>.zip
+```
+
+The ZIP contains only the contents of `extension/`, with `manifest.json` at the archive root. Backend source, tests, repository documentation, and development files are not included in the Chrome Web Store package.
+
+See [CHROME_WEB_STORE.md](CHROME_WEB_STORE.md) for prepared store copy, privacy-practice answers, permission justifications, reviewer test instructions, screenshot guidance, and the submission checklist.
+
+## Publisher OAuth backend
+
+The backend source is in `backend/cloudflare-worker/`. A publisher configuring a fresh deployment should:
+
+1. create a Notion Public connection with the required read/insert capabilities;
+2. deploy the Cloudflare Worker;
+3. register `https://<worker-host>/oauth/callback` as the Notion redirect URI;
+4. configure `NOTION_CLIENT_ID`, `NOTION_CLIENT_SECRET`, and `STATE_SECRET` as Worker secrets;
+5. keep the production Worker URL synchronized with `extension/js/config.js` and `extension/manifest.json`.
+
+The deployed production Worker currently used by the extension is:
+
+```text
+https://tabs2notion-oauth.nikolaskaralis.workers.dev
+```
 
 ## Project layout
 
 ```text
 Tabs2Notion/
-├── extension/
+├── extension/                 # Chrome Web Store package source
 │   ├── manifest.json
 │   ├── service-worker.js
 │   ├── popup.html
@@ -195,15 +124,16 @@ Tabs2Notion/
 │   ├── styles.css
 │   ├── icons/
 │   └── js/
-├── backend/
-│   └── cloudflare-worker/
-│       ├── worker.js
-│       └── wrangler.toml.example
+├── backend/cloudflare-worker/ # publisher OAuth helper
+├── scripts/                   # validation + packaging
+├── store/assets/              # Chrome Web Store graphics
 ├── tests/
-├── package.json
+├── PRIVACY.md
+├── CHROME_WEB_STORE.md
+├── LICENSE
 └── README.md
 ```
 
-## Current version
+## License
 
-`0.1.0` — functional first implementation intended for local testing. Before publishing in the Chrome Web Store: deploy a stable publisher-controlled OAuth backend, set that URL as `DEFAULT_OAUTH_BACKEND`, add a privacy policy, finalize branding/store assets, review permission disclosures, and run an interactive multi-workspace smoke test.
+MIT. See [LICENSE](LICENSE).
