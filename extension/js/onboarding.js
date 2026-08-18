@@ -7,6 +7,7 @@ import {
 import { listDataSources } from "./notion.js";
 import { getSettings, removeWorkspace, setSettings } from "./storage.js";
 
+const heroConnectionBadge = document.getElementById("heroConnectionBadge");
 const pinPromptCard = document.getElementById("pinPromptCard");
 const checkPinBtn = document.getElementById("checkPinBtn");
 const pinStatus = document.getElementById("pinStatus");
@@ -108,6 +109,46 @@ async function renderDefaultControls() {
   }
 }
 
+function workspaceRow(workspace) {
+  const row = document.createElement("div");
+  row.className = "setting-row";
+
+  const icon = document.createElement("div");
+  icon.className = "workspace-icon setting-icon";
+  const workspaceIcon = workspace.workspace_icon || "";
+  if (/^https?:\/\//i.test(workspaceIcon)) {
+    const img = document.createElement("img");
+    img.src = workspaceIcon;
+    img.alt = "";
+    img.referrerPolicy = "no-referrer";
+    img.addEventListener("error", () => {
+      img.remove();
+      icon.textContent = "🌐";
+    }, { once: true });
+    icon.append(img);
+  } else if (workspaceIcon) {
+    icon.textContent = workspaceIcon;
+  } else {
+    icon.textContent = "🌐";
+  }
+
+  const copy = document.createElement("div");
+  copy.className = "setting-copy";
+  copy.innerHTML = `<div class="setting-title">${workspace.workspace_name || 'Notion workspace'}</div><div class="subtle">Connected and ready to use</div>`;
+
+  const remove = document.createElement("button");
+  remove.className = "danger-button";
+  remove.textContent = "Disconnect";
+  remove.addEventListener("click", async () => {
+    await removeWorkspace(workspace.workspace_id);
+    databasesByWorkspace.delete(workspace.workspace_id);
+    await render();
+  });
+
+  row.append(icon, copy, remove);
+  return row;
+}
+
 async function render() {
   await renderPinPrompt();
   const settings = await getSettings();
@@ -116,53 +157,18 @@ async function render() {
   backendUrl.value = bundledBackend ? await getOAuthBackendUrl() : (settings.oauthBackendUrl || "");
 
   const workspaces = Object.values(settings.workspaces);
-  workspaceList.replaceChildren();
+  heroConnectionBadge.textContent = workspaces.length
+    ? `${workspaces.length} workspace${workspaces.length === 1 ? '' : 's'} connected`
+    : 'Not connected';
 
+  workspaceList.replaceChildren();
   if (!workspaces.length) {
     const empty = document.createElement("div");
     empty.className = "status";
     empty.textContent = "No Notion workspaces connected yet.";
     workspaceList.append(empty);
   } else {
-    for (const workspace of workspaces) {
-      const row = document.createElement("div");
-      row.className = "row-between";
-      row.style.padding = "8px 0";
-
-      const left = document.createElement("div");
-      left.className = "workspace-pill";
-      const icon = document.createElement("div");
-      icon.className = "workspace-icon";
-      if (workspace.workspace_icon) {
-        const img = document.createElement("img");
-        img.src = workspace.workspace_icon;
-        img.alt = "";
-        icon.append(img);
-      } else {
-        icon.textContent = "🌐";
-      }
-      const text = document.createElement("div");
-      const name = document.createElement("div");
-      name.className = "workspace-name";
-      name.textContent = workspace.workspace_name || "Notion workspace";
-      const meta = document.createElement("div");
-      meta.className = "subtle";
-      meta.textContent = "Connected";
-      text.append(name, meta);
-      left.append(icon, text);
-
-      const remove = document.createElement("button");
-      remove.className = "danger-button";
-      remove.textContent = "Disconnect";
-      remove.addEventListener("click", async () => {
-        await removeWorkspace(workspace.workspace_id);
-        databasesByWorkspace.delete(workspace.workspace_id);
-        await render();
-      });
-
-      row.append(left, remove);
-      workspaceList.append(row);
-    }
+    workspaceList.append(...workspaces.map(workspaceRow));
   }
 
   await renderDefaultControls();
@@ -209,7 +215,7 @@ defaultDatabaseSelect.addEventListener("change", async () => {
 
 closeTabsDefault.addEventListener("change", async () => {
   await setSettings({ closeTabsAfterSave: closeTabsDefault.checked });
-  defaultStatus.textContent = closeTabsDefault.checked ? "Saved tabs will be closed." : "Saved tabs will stay open.";
+  defaultStatus.textContent = closeTabsDefault.checked ? "Saved tabs will be closed after success." : "Saved tabs will stay open.";
 });
 
 skipDialogDefault.addEventListener("change", async () => {

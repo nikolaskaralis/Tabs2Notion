@@ -9,7 +9,8 @@
     "tabs",
     "storage",
     "contextMenus",
-    "identity"
+    "identity",
+    "notifications"
   ],
   "host_permissions": [
     "https://api.notion.com/*",

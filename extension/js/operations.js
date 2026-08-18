@@ -1,5 +1,6 @@
 import { saveTabs } from "./notion.js";
 import { collectTabs } from "./tabs.js";
+import { showSavedNotification } from "./feedback.js";
 import { getSettings, rememberTarget, savePendingOperation } from "./storage.js";
 
 function makeOperation(action, collected) {
@@ -25,8 +26,9 @@ export async function openSelectorForOperation(operation) {
   await chrome.windows.create({ url, type: "popup", width: 460, height: 680, focused: true });
 }
 
-async function showBadge(text, timeout = 1800) {
+async function showBadge(text, timeout = 1800, color = "#1d6fff") {
   try {
+    await chrome.action.setBadgeBackgroundColor({ color });
     await chrome.action.setBadgeText({ text });
     setTimeout(() => chrome.action.setBadgeText({ text: "" }).catch(() => {}), timeout);
   } catch {
@@ -49,7 +51,12 @@ async function saveWithDefaults(operation, settings) {
     }
   }
 
-  await showBadge(result.failures.length ? "!" : "✓");
+  await showBadge(result.failures.length ? "!" : "✓", 1800, result.failures.length ? "#b42318" : "#0f9d58");
+  await showSavedNotification({
+    title: result.failures.length ? "Tabs saved with some issues" : "Tabs saved to Notion",
+    message: `${result.successes.length} tab${result.successes.length === 1 ? "" : "s"} ${result.failures.length ? `saved · ${result.failures.length} failed` : `saved to ${target.title}`}` ,
+    isError: Boolean(result.failures.length)
+  });
   if (result.failures.length) {
     console.warn("Tabs2Notion default save completed with failures", result.failures);
   }

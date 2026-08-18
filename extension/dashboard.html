@@ -8,28 +8,35 @@
 </head>
 <body>
   <main class="shell stack">
-    <div class="row-between">
-      <div class="brand"><img src="icons/icon48.png" alt=""><span class="brand-name">Tabs2Notion</span></div>
-      <div class="row"><button id="settingsBtn" class="secondary">Settings</button><a href="help.html">Help</a></div>
-    </div>
+    <section class="card hero-card app-surface">
+      <div>
+        <div class="brand"><img src="icons/icon48.png" alt=""><span class="brand-name">Tabs2Notion</span></div>
+        <h1>Quick send and workspace overview</h1>
+        <p class="subtle">Use quick-send actions, review connected workspaces, and manage excluded sites.</p>
+      </div>
+      <div class="row wrap"><button id="settingsBtn" class="secondary">Open settings</button><a href="help.html">Help</a></div>
+    </section>
+
     <section class="card stack">
-      <h2>Quick send</h2>
+      <div class="row-between"><h2 style="margin:0">Quick send</h2><span class="badge soft">Choose an action</span></div>
       <div class="menu" style="grid-template-columns:1fr 1fr">
-        <button data-action="current-window">All tabs in this window</button>
-        <button data-action="current-group">Current tab group</button>
-        <button data-action="selected">Selected tabs</button>
-        <button data-action="current-tab">Only this tab</button>
-        <button data-action="except-current">All except this tab</button>
-        <button data-action="all-windows">All tabs from all windows</button>
+        <button data-action="current-window"><span class="menu-icon">▣</span><span class="menu-label">All tabs in this window</span></button>
+        <button data-action="current-group"><span class="menu-icon">◫</span><span class="menu-label">Current tab group</span></button>
+        <button data-action="selected"><span class="menu-icon">⬚</span><span class="menu-label">Selected tabs</span></button>
+        <button data-action="current-tab"><span class="menu-icon">◻</span><span class="menu-label">Only this tab</span></button>
+        <button data-action="except-current"><span class="menu-icon">⊖</span><span class="menu-label">All except this tab</span></button>
+        <button data-action="all-windows"><span class="menu-icon">⧉</span><span class="menu-label">All tabs from all windows</span></button>
       </div>
     </section>
+
     <section class="card stack">
       <div class="row-between"><h2 style="margin:0">Connected workspaces</h2><button id="connectBtn" class="primary">Connect another</button></div>
-      <div id="workspaceList"></div>
+      <div id="workspaceList" class="stack"></div>
     </section>
+
     <section class="card stack">
       <h2>Excluded sites</h2>
-      <div id="excludedList"></div>
+      <div id="excludedList" class="stack"></div>
     </section>
     <div id="status" class="subtle"></div>
   </main>
