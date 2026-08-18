@@ -1,122 +1,127 @@
-# Chrome Web Store submission copy
+# Chrome Web Store submission guide
 
-This file contains the text and answers to use when preparing the Tabs2Notion Chrome Web Store listing. Re-check the Developer Dashboard wording at submission time because Google may rename fields.
+This file contains the copy and answers prepared for the first Tabs2Notion Chrome Web Store submission.
 
-## Listing
+## Store listing
 
-**Name**
-
+**Name**  
 Tabs2Notion
 
-**Category**
-
+**Category**  
 Productivity
 
-**Summary / short description**
+**Primary language**  
+English
 
-> Send one tab, selected tabs, tab groups, windows, or all open tabs directly to a Notion database.
+**Short description**  
+Send one tab, selected tabs, tab groups, windows, or all open tabs directly to a Notion database.
 
 **Detailed description**
 
-> Tabs2Notion turns tab cleanup into a one-click Notion workflow.
->
-> Save the current tab, selected tabs, a Chrome tab group, every tab in the current window, tabs to the left or right, or all open tabs across windows. Tabs2Notion creates one Notion page per tab using the tab title and URL.
->
-> You can choose a destination each time, or configure a default workspace and database for instant saving. You can also choose whether successfully saved tabs should be closed and what clicking the pinned Tabs2Notion icon should do.
->
-> Key features:
->
-> - Save one tab or many tabs to Notion.
-> - Flat right-click commands for fast access.
-> - Works with selected tabs, tab groups, windows, and all windows.
-> - Configurable default workspace and database.
-> - Optional one-click saving without a destination dialog.
-> - Optional close-after-save behavior; only successfully saved tabs are closed.
-> - Exclude domains you do not want to send.
-> - Notion OAuth login; no Notion API key to copy or paste.
->
-> Tabs2Notion has one purpose: helping you move browser tabs you explicitly select into your own Notion workspace.
+Tabs2Notion turns open browser tabs into organized Notion database entries without making you save pages one at a time.
 
-## Single-purpose statement
+Choose exactly what to send: the current tab, selected tabs, the current tab group, tabs to the left or right, the active window, or all open windows. Tabs2Notion saves each tab as a Notion page using the tab title and URL.
 
-Tabs2Notion's single purpose is to save browser-tab metadata selected by the user (tab title and URL) into a Notion database chosen by the user.
+You can choose a destination each time or configure a default workspace and database for one-click saving. You can also choose whether successfully saved tabs stay open or close automatically, set the action performed by the pinned toolbar icon, and exclude domains you never want to send.
+
+Authentication uses Notion OAuth. Normal tab-saving traffic goes directly from the extension to Notion's API; the publisher-hosted authentication service is used only for OAuth code exchange and token refresh.
+
+**Homepage URL**  
+https://github.com/nikolaskaralis/Tabs2Notion
+
+**Support URL**  
+https://github.com/nikolaskaralis/Tabs2Notion/issues
+
+**Privacy policy URL**  
+https://nikolaskaralis.github.io/Tabs2Notion/privacy.html
+
+## Single purpose
+
+> Tabs2Notion saves user-selected sets of open Chrome tabs as pages in a Notion database chosen by the user.
+
+Use that wording, or a close equivalent, in the Chrome Web Store Privacy tab.
 
 ## Permission justifications
 
 ### `tabs`
-
-Required to read the title and URL of the tabs selected by a Tabs2Notion command; determine tab position, group, window, highlighted state, and active state; and optionally close tabs after Notion confirms they were saved.
-
-Tabs2Notion does not continuously monitor or upload browsing activity.
+Required to read the titles and URLs of the tabs selected by the user, determine their position/group/window for the available tab-selection commands, and close only those tabs that were successfully saved when the user enables that behavior.
 
 ### `storage`
-
-Required to keep Notion connection tokens and local preferences, including connected workspace metadata, recent/default destinations, excluded domains, close-after-save preference, and toolbar behavior.
-
-Local storage is restricted to trusted extension contexts.
+Required to store Notion workspace authorization information and local preferences such as default destination, recent destinations, excluded domains, close-tabs behavior, and pinned-icon behavior.
 
 ### `contextMenus`
-
-Required to provide the right-click commands for saving the current tab, tab groups, selected tabs, windows, tabs to the left/right, and other supported tab sets.
+Required to expose Tabs2Notion's tab-selection actions from Chrome's right-click menu.
 
 ### `identity`
+Required to complete the Notion OAuth login flow using Chrome's extension-specific redirect URL.
 
-Required to complete Notion OAuth using Chrome's extension redirect URL through `chrome.identity.launchWebAuthFlow()`.
+### Host access: `https://api.notion.com/*`
+Required to search the user's authorized Notion destinations, inspect the selected database/data-source schema, create pages, and refresh normal Notion data shown by the extension.
 
-## Host permission justifications
+### Host access: `https://tabs2notion-oauth.nikolaskaralis.workers.dev/*`
+Required only for the publisher-operated OAuth helper used for Notion authorization-code exchange and refresh. Normal tab titles, tab URLs, and Notion page creation requests are not proxied through this service.
 
-### `https://api.notion.com/*`
+## Privacy Practices questionnaire
 
-Required to list accessible Notion databases, inspect the selected database schema, create pages for explicitly selected tabs, and use the user's Notion OAuth token.
+The dashboard wording can change over time, so answer according to the actual categories shown. Based on the current implementation:
 
-### `https://tabs2notion-oauth.nikolaskaralis.workers.dev/*`
+- Declare **authentication information** because the extension handles Notion OAuth access/refresh credentials.
+- Declare **web browsing activity / URLs** (often labelled **Web history**) because selected tab URLs and titles are processed even though the extension does not build a browsing-history profile.
+- Do **not** claim that no user data is handled merely because much of it is local; Chrome Web Store policy treats locally processed user data as data handling too.
+- Do not declare webpage body/content collection: Tabs2Notion does not scrape or read page bodies.
+- Data is used for **app functionality** only.
+- Data is not sold and is not used for advertising, retargeting, creditworthiness, or unrelated personalization.
+- Data is transferred to **Notion** only as needed to save the user-selected tabs.
+- The Cloudflare-hosted OAuth service transiently processes OAuth exchange/refresh data; it does not receive normal tab-saving payloads.
+- Certify compliance with the Chrome Web Store **Limited Use** requirements.
 
-Required only for Notion OAuth authorization-code exchange and token refresh. Tab titles, tab URLs, and Notion database content are not proxied through this service.
+Keep the dashboard answers consistent with `PRIVACY.md`.
 
-## Privacy Practices / user data
+## Reviewer test instructions
 
-Use the actual Developer Dashboard wording at submission time. Based on the current implementation, disclose at least:
+No publisher test account is required. The reviewer can use any Notion account/workspace to which they have access.
 
-- **Web history / browsing data:** YES — Tabs2Notion reads URLs and titles of the open tabs that are part of a user-invoked command.
-- **Authentication information:** YES — the extension handles Notion OAuth access and refresh tokens.
-- **Website content:** NO for page bodies/content — Tabs2Notion does not read page DOM/content. If the Dashboard groups page titles with website content, answer conservatively and disclose it.
-- **Personally identifiable information:** Tabs2Notion does not intentionally collect a user's name, email, address, or similar profile fields for its own purposes. Notion workspace names/icons and OAuth identifiers may be processed as necessary to display and maintain the connection.
-- **Location, health, financial/payment information, personal communications:** NO.
-- **User activity:** do not claim behavioral analytics; Tabs2Notion does not track clicks, keystrokes, or browsing behavior for analytics.
+1. Install the extension and open **Settings**.
+2. Click **Connect Notion** and authorize a workspace.
+3. In Notion's authorization picker, grant access to at least one database/data source.
+4. Open one or more ordinary `http://` or `https://` webpages.
+5. Use the toolbar or right-click menu and choose **Send only this tab to Notion** (or another action).
+6. Choose the authorized database and save.
+7. Confirm a Notion page is created with the tab title and URL.
+8. Optional: configure a default database and enable **Use defaults without showing the destination dialog** to test one-click saving.
 
-For every applicable category, the use is limited to the extension's user-facing single purpose. Tabs2Notion does not sell data, use it for ads, or transfer it to data brokers.
+Browser-internal URLs such as `chrome://extensions` are intentionally skipped.
 
-## Privacy policy URL
+## Graphic assets
 
-After GitHub Pages is enabled from the repository's `docs/` folder:
+Prepared in `store/assets/`:
 
-`https://nikolaskaralis.github.io/Tabs2Notion/privacy.html`
+- `store-icon-128.png` — 128×128, with the visible artwork sized to Chrome Web Store guidance.
+- `promo-440x280.png` — required small promotional tile.
+- `marquee-1400x560.png` — optional marquee promotional image.
 
-## Support URL
+Capture real extension screenshots after the final browser smoke test. Chrome accepts 1280×800 or 640×400 screenshots and requires at least one; five are recommended.
 
-`https://github.com/nikolaskaralis/Tabs2Notion/issues`
+Suggested screenshot set:
 
-## Homepage
+1. Flat right-click menu showing the tab-selection actions.
+2. Destination picker showing workspace/database selection.
+3. Settings showing default workspace/database, close-tabs behavior, skip-dialog option, and pinned-icon behavior.
+4. A Notion database showing several tabs successfully saved as rows/pages.
+5. One-click/default flow, ideally showing the toolbar icon and success badge.
 
-`https://nikolaskaralis.github.io/Tabs2Notion/`
+Screenshots should show the actual current extension UI, use square corners/no padding, and avoid exposing private workspace data.
 
-or, until GitHub Pages is enabled:
+## Distribution
 
-`https://github.com/nikolaskaralis/Tabs2Notion`
+For the first external test, use **Unlisted** visibility. Unlisted items still go through Chrome Web Store review but can be installed only by users who have the item URL. After testing, switch to Public and submit the production version for review.
 
-## Store assets
+## Before pressing Submit for Review
 
-Prepare actual screenshots from the production extension rather than mockups.
-
-Recommended screenshot set:
-
-1. **Flat right-click menu** — show the main tab-saving commands without a submenu.
-2. **Destination picker** — show workspace/database selection.
-3. **Defaults settings** — show default database, close-after-save, instant-save, and pinned-icon behavior.
-4. **Notion result** — show several tabs successfully created in a Notion database.
-5. **Toolbar workflow** — optional; demonstrate a one-click direct save and success badge.
-
-Keep screenshots free of sensitive tab titles, private URLs, email addresses, workspace names, or authentication data. Use a clean demo workspace/database.
-
-Google's current listing documentation should be checked immediately before upload for required dimensions and asset limits:
-https://developer.chrome.com/docs/webstore/cws-dashboard-listing/
+- Run `npm run package` from the repository root.
+- Upload the resulting `dist/Tabs2Notion-<version>.zip`.
+- Confirm the ZIP opens with `manifest.json` at its root.
+- Verify the Store Listing, Privacy, Distribution, and Test instructions tabs.
+- Upload at least one real 1280×800 screenshot and the small promo tile.
+- Use the public privacy-policy URL above.
+- Test the exact uploaded build once more locally before submission.
